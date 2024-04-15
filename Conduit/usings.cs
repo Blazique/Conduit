@@ -5,3 +5,4 @@ global using static Blazique.Web.Attributes;
 global using Blazique.Web;
 global using static Blazique.Nodes;
 global using static Blazique.Components;
+global using Microsoft.AspNetCore.Components;
