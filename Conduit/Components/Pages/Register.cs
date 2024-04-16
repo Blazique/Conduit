@@ -1,12 +1,15 @@
-using Microsoft.AspNetCore.Components.Web;
 
 namespace Conduit.Components;
 
 [Route("/Register")]
-public class Register : Blazique.Web.Component
+public class Register : Component<RegisterModel, RegisterCommand>
 {
-    public override Node[] Render()
-    =>
+    public override ValueTask<RegisterModel> Update(RegisterModel model, RegisterCommand command)
+    {
+        
+    }
+
+    public override Node[] View(RegisterModel model, Func<RegisterCommand, Task> dispatch) =>
     [
         div([@class(["auth-page"])], [
             div([@class(["container", "page"])], [
@@ -37,3 +40,7 @@ public class Register : Blazique.Web.Component
         ])
     ];
 }
+
+public record RegisterCommand(string Username, string Email, string Password);
+
+public record RegisterModel(string Username, string Email, string Password);
