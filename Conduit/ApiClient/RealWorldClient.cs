@@ -19,6 +19,9 @@
 
 namespace Conduit.ApiClient
 {
+    using System.Text.Json;
+    using Newtonsoft.Json;
+    using Radix;
     using System = global::System;
 
     [System.CodeDom.Compiler.GeneratedCode("NSwag", "14.0.7.0 (NJsonSchema v11.0.0.0 (Newtonsoft.Json v13.0.0.0))")]
@@ -32,10 +35,10 @@ namespace Conduit.ApiClient
         private static System.Lazy<Newtonsoft.Json.JsonSerializerSettings> _settings = new System.Lazy<Newtonsoft.Json.JsonSerializerSettings>(CreateSerializerSettings, true);
 
     #pragma warning disable CS8618 // Non-nullable field must contain a non-null value when exiting constructor. Consider declaring as nullable.
-        public RealWorldClient(System.Net.Http.HttpClient httpClient)
+        public RealWorldClient(string baseUrl, System.Net.Http.HttpClient httpClient)
     #pragma warning restore CS8618 // Non-nullable field must contain a non-null value when exiting constructor. Consider declaring as nullable.
         {
-            BaseUrl = "https://api.realworld.io/api";
+            BaseUrl = baseUrl;
             _httpClient = httpClient;
         }
 
@@ -71,9 +74,10 @@ namespace Conduit.ApiClient
         /// <remarks>
         /// Login for existing user
         /// </remarks>
-        /// <returns>User</returns>
+        /// <param name="body">Credentials to use</param>
+        /// <returns>OK</returns>
         /// <exception cref="ApiException">A server side error occurred.</exception>
-        public virtual System.Threading.Tasks.Task<Response> LoginAsync(object body)
+        public virtual System.Threading.Tasks.Task<UserResponse> LoginAsync(LoginUserRequest body)
         {
             return LoginAsync(body, System.Threading.CancellationToken.None);
         }
@@ -85,10 +89,14 @@ namespace Conduit.ApiClient
         /// <remarks>
         /// Login for existing user
         /// </remarks>
-        /// <returns>User</returns>
+        /// <param name="body">Credentials to use</param>
+        /// <returns>OK</returns>
         /// <exception cref="ApiException">A server side error occurred.</exception>
-        public virtual async System.Threading.Tasks.Task<Response> LoginAsync(object body, System.Threading.CancellationToken cancellationToken)
+        public virtual async System.Threading.Tasks.Task<UserResponse> LoginAsync(LoginUserRequest body, System.Threading.CancellationToken cancellationToken)
         {
+            if (body == null)
+                throw new System.ArgumentNullException("body");
+
             var client_ = _httpClient;
             var disposeClient_ = false;
             try
@@ -132,7 +140,7 @@ namespace Conduit.ApiClient
                         var status_ = (int)response_.StatusCode;
                         if (status_ == 200)
                         {
-                            var objectResponse_ = await ReadObjectResponseAsync<Response>(response_, headers_, cancellationToken).ConfigureAwait(false);
+                            var objectResponse_ = await ReadObjectResponseAsync<UserResponse>(response_, headers_, cancellationToken).ConfigureAwait(false);
                             if (objectResponse_.Object == null)
                             {
                                 throw new ApiException("Response was null which was not expected.", status_, objectResponse_.Text, headers_, null);
@@ -175,24 +183,35 @@ namespace Conduit.ApiClient
             }
         }
 
+        /// <summary>
+        /// Register a new user
+        /// </summary>
         /// <remarks>
         /// Register a new user
         /// </remarks>
-        /// <returns>User</returns>
+        /// <param name="body">Details of the new user to register</param>
+        /// <returns>OK</returns>
         /// <exception cref="ApiException">A server side error occurred.</exception>
-        public virtual System.Threading.Tasks.Task<Response> CreateUserAsync(object body)
+        public virtual System.Threading.Tasks.Task<UserResponse> CreateUserAsync(NewUserRequest body)
         {
             return CreateUserAsync(body, System.Threading.CancellationToken.None);
         }
 
         /// <param name="cancellationToken">A cancellation token that can be used by other objects or threads to receive notice of cancellation.</param>
+        /// <summary>
+        /// Register a new user
+        /// </summary>
         /// <remarks>
         /// Register a new user
         /// </remarks>
-        /// <returns>User</returns>
+        /// <param name="body">Details of the new user to register</param>
+        /// <returns>OK</returns>
         /// <exception cref="ApiException">A server side error occurred.</exception>
-        public virtual async System.Threading.Tasks.Task<Response> CreateUserAsync(object body, System.Threading.CancellationToken cancellationToken)
+        public virtual async System.Threading.Tasks.Task<UserResponse> CreateUserAsync(NewUserRequest body, System.Threading.CancellationToken cancellationToken)
         {
+            if (body == null)
+                throw new System.ArgumentNullException("body");
+
             var client_ = _httpClient;
             var disposeClient_ = false;
             try
@@ -234,9 +253,11 @@ namespace Conduit.ApiClient
                         ProcessResponse(client_, response_);
 
                         var status_ = (int)response_.StatusCode;
+                                                    
                         if (status_ == 201)
                         {
-                            var objectResponse_ = await ReadObjectResponseAsync<Response>(response_, headers_, cancellationToken).ConfigureAwait(false);
+                            var objectResponse_ = await ReadObjectResponseAsync<UserResponse>(response_, headers_, cancellationToken).ConfigureAwait(false);
+
                             if (objectResponse_.Object == null)
                             {
                                 throw new ApiException("Response was null which was not expected.", status_, objectResponse_.Text, headers_, null);
@@ -279,9 +300,9 @@ namespace Conduit.ApiClient
         /// <remarks>
         /// Gets the currently logged-in user
         /// </remarks>
-        /// <returns>User</returns>
+        /// <returns>OK</returns>
         /// <exception cref="ApiException">A server side error occurred.</exception>
-        public virtual System.Threading.Tasks.Task<Response> GetCurrentUserAsync()
+        public virtual System.Threading.Tasks.Task<UserResponse> GetCurrentUserAsync()
         {
             return GetCurrentUserAsync(System.Threading.CancellationToken.None);
         }
@@ -293,9 +314,9 @@ namespace Conduit.ApiClient
         /// <remarks>
         /// Gets the currently logged-in user
         /// </remarks>
-        /// <returns>User</returns>
+        /// <returns>OK</returns>
         /// <exception cref="ApiException">A server side error occurred.</exception>
-        public virtual async System.Threading.Tasks.Task<Response> GetCurrentUserAsync(System.Threading.CancellationToken cancellationToken)
+        public virtual async System.Threading.Tasks.Task<UserResponse> GetCurrentUserAsync(System.Threading.CancellationToken cancellationToken)
         {
             var client_ = _httpClient;
             var disposeClient_ = false;
@@ -336,7 +357,7 @@ namespace Conduit.ApiClient
                         var status_ = (int)response_.StatusCode;
                         if (status_ == 200)
                         {
-                            var objectResponse_ = await ReadObjectResponseAsync<Response>(response_, headers_, cancellationToken).ConfigureAwait(false);
+                            var objectResponse_ = await ReadObjectResponseAsync<UserResponse>(response_, headers_, cancellationToken).ConfigureAwait(false);
                             if (objectResponse_.Object == null)
                             {
                                 throw new ApiException("Response was null which was not expected.", status_, objectResponse_.Text, headers_, null);
@@ -385,9 +406,10 @@ namespace Conduit.ApiClient
         /// <remarks>
         /// Updated user information for current user
         /// </remarks>
-        /// <returns>User</returns>
+        /// <param name="body">User details to update. At least **one** field is required.</param>
+        /// <returns>OK</returns>
         /// <exception cref="ApiException">A server side error occurred.</exception>
-        public virtual System.Threading.Tasks.Task<Response> UpdateCurrentUserAsync(object body)
+        public virtual System.Threading.Tasks.Task<UserResponse> UpdateCurrentUserAsync(UpdateUserRequest body)
         {
             return UpdateCurrentUserAsync(body, System.Threading.CancellationToken.None);
         }
@@ -399,10 +421,14 @@ namespace Conduit.ApiClient
         /// <remarks>
         /// Updated user information for current user
         /// </remarks>
-        /// <returns>User</returns>
+        /// <param name="body">User details to update. At least **one** field is required.</param>
+        /// <returns>OK</returns>
         /// <exception cref="ApiException">A server side error occurred.</exception>
-        public virtual async System.Threading.Tasks.Task<Response> UpdateCurrentUserAsync(object body, System.Threading.CancellationToken cancellationToken)
+        public virtual async System.Threading.Tasks.Task<UserResponse> UpdateCurrentUserAsync(UpdateUserRequest body, System.Threading.CancellationToken cancellationToken)
         {
+            if (body == null)
+                throw new System.ArgumentNullException("body");
+
             var client_ = _httpClient;
             var disposeClient_ = false;
             try
@@ -446,7 +472,9 @@ namespace Conduit.ApiClient
                         var status_ = (int)response_.StatusCode;
                         if (status_ == 200)
                         {
-                            var objectResponse_ = await ReadObjectResponseAsync<Response>(response_, headers_, cancellationToken).ConfigureAwait(false);
+                            var userResponse = JsonConvert.DeserializeObject<UserResponse>(response_.Content.ReadAsStringAsync().Result);
+                            Console.WriteLine(userResponse);
+                            var objectResponse_ = await ReadObjectResponseAsync<UserResponse>(response_, headers_, cancellationToken).ConfigureAwait(false);
                             if (objectResponse_.Object == null)
                             {
                                 throw new ApiException("Response was null which was not expected.", status_, objectResponse_.Text, headers_, null);
@@ -496,9 +524,9 @@ namespace Conduit.ApiClient
         /// Get a profile of a user of the system. Auth is optional
         /// </remarks>
         /// <param name="username">Username of the profile to get</param>
-        /// <returns>Profile</returns>
+        /// <returns>OK</returns>
         /// <exception cref="ApiException">A server side error occurred.</exception>
-        public virtual System.Threading.Tasks.Task<Response2> GetProfileByUsernameAsync(string username)
+        public virtual System.Threading.Tasks.Task<ProfileResponse> GetProfileByUsernameAsync(string username)
         {
             return GetProfileByUsernameAsync(username, System.Threading.CancellationToken.None);
         }
@@ -511,9 +539,9 @@ namespace Conduit.ApiClient
         /// Get a profile of a user of the system. Auth is optional
         /// </remarks>
         /// <param name="username">Username of the profile to get</param>
-        /// <returns>Profile</returns>
+        /// <returns>OK</returns>
         /// <exception cref="ApiException">A server side error occurred.</exception>
-        public virtual async System.Threading.Tasks.Task<Response2> GetProfileByUsernameAsync(string username, System.Threading.CancellationToken cancellationToken)
+        public virtual async System.Threading.Tasks.Task<ProfileResponse> GetProfileByUsernameAsync(string username, System.Threading.CancellationToken cancellationToken)
         {
             if (username == null)
                 throw new System.ArgumentNullException("username");
@@ -558,7 +586,7 @@ namespace Conduit.ApiClient
                         var status_ = (int)response_.StatusCode;
                         if (status_ == 200)
                         {
-                            var objectResponse_ = await ReadObjectResponseAsync<Response2>(response_, headers_, cancellationToken).ConfigureAwait(false);
+                            var objectResponse_ = await ReadObjectResponseAsync<ProfileResponse>(response_, headers_, cancellationToken).ConfigureAwait(false);
                             if (objectResponse_.Object == null)
                             {
                                 throw new ApiException("Response was null which was not expected.", status_, objectResponse_.Text, headers_, null);
@@ -608,9 +636,9 @@ namespace Conduit.ApiClient
         /// Follow a user by username
         /// </remarks>
         /// <param name="username">Username of the profile you want to follow</param>
-        /// <returns>Profile</returns>
+        /// <returns>OK</returns>
         /// <exception cref="ApiException">A server side error occurred.</exception>
-        public virtual System.Threading.Tasks.Task<Response2> FollowUserByUsernameAsync(string username)
+        public virtual System.Threading.Tasks.Task<ProfileResponse> FollowUserByUsernameAsync(string username)
         {
             return FollowUserByUsernameAsync(username, System.Threading.CancellationToken.None);
         }
@@ -623,9 +651,9 @@ namespace Conduit.ApiClient
         /// Follow a user by username
         /// </remarks>
         /// <param name="username">Username of the profile you want to follow</param>
-        /// <returns>Profile</returns>
+        /// <returns>OK</returns>
         /// <exception cref="ApiException">A server side error occurred.</exception>
-        public virtual async System.Threading.Tasks.Task<Response2> FollowUserByUsernameAsync(string username, System.Threading.CancellationToken cancellationToken)
+        public virtual async System.Threading.Tasks.Task<ProfileResponse> FollowUserByUsernameAsync(string username, System.Threading.CancellationToken cancellationToken)
         {
             if (username == null)
                 throw new System.ArgumentNullException("username");
@@ -672,7 +700,7 @@ namespace Conduit.ApiClient
                         var status_ = (int)response_.StatusCode;
                         if (status_ == 200)
                         {
-                            var objectResponse_ = await ReadObjectResponseAsync<Response2>(response_, headers_, cancellationToken).ConfigureAwait(false);
+                            var objectResponse_ = await ReadObjectResponseAsync<ProfileResponse>(response_, headers_, cancellationToken).ConfigureAwait(false);
                             if (objectResponse_.Object == null)
                             {
                                 throw new ApiException("Response was null which was not expected.", status_, objectResponse_.Text, headers_, null);
@@ -722,9 +750,9 @@ namespace Conduit.ApiClient
         /// Unfollow a user by username
         /// </remarks>
         /// <param name="username">Username of the profile you want to unfollow</param>
-        /// <returns>Profile</returns>
+        /// <returns>OK</returns>
         /// <exception cref="ApiException">A server side error occurred.</exception>
-        public virtual System.Threading.Tasks.Task<Response2> UnfollowUserByUsernameAsync(string username)
+        public virtual System.Threading.Tasks.Task<ProfileResponse> UnfollowUserByUsernameAsync(string username)
         {
             return UnfollowUserByUsernameAsync(username, System.Threading.CancellationToken.None);
         }
@@ -737,9 +765,9 @@ namespace Conduit.ApiClient
         /// Unfollow a user by username
         /// </remarks>
         /// <param name="username">Username of the profile you want to unfollow</param>
-        /// <returns>Profile</returns>
+        /// <returns>OK</returns>
         /// <exception cref="ApiException">A server side error occurred.</exception>
-        public virtual async System.Threading.Tasks.Task<Response2> UnfollowUserByUsernameAsync(string username, System.Threading.CancellationToken cancellationToken)
+        public virtual async System.Threading.Tasks.Task<ProfileResponse> UnfollowUserByUsernameAsync(string username, System.Threading.CancellationToken cancellationToken)
         {
             if (username == null)
                 throw new System.ArgumentNullException("username");
@@ -785,7 +813,7 @@ namespace Conduit.ApiClient
                         var status_ = (int)response_.StatusCode;
                         if (status_ == 200)
                         {
-                            var objectResponse_ = await ReadObjectResponseAsync<Response2>(response_, headers_, cancellationToken).ConfigureAwait(false);
+                            var objectResponse_ = await ReadObjectResponseAsync<ProfileResponse>(response_, headers_, cancellationToken).ConfigureAwait(false);
                             if (objectResponse_.Object == null)
                             {
                                 throw new ApiException("Response was null which was not expected.", status_, objectResponse_.Text, headers_, null);
@@ -834,13 +862,13 @@ namespace Conduit.ApiClient
         /// <remarks>
         /// Get most recent articles from users you follow. Use query parameters to limit. Auth is required
         /// </remarks>
-        /// <param name="offset">The number of items to skip before starting to collect the result set.</param>
-        /// <param name="limit">The numbers of items to return.</param>
-        /// <returns>Multiple articles</returns>
+        /// <param name="limit">Limit number of articles returned (default is 20)</param>
+        /// <param name="offset">Offset/skip number of articles (default is 0)</param>
+        /// <returns>OK</returns>
         /// <exception cref="ApiException">A server side error occurred.</exception>
-        public virtual System.Threading.Tasks.Task<Response3> GetArticlesFeedAsync(int? offset, int? limit)
+        public virtual System.Threading.Tasks.Task<MultipleArticlesResponse> GetArticlesFeedAsync(int? limit, int? offset)
         {
-            return GetArticlesFeedAsync(offset, limit, System.Threading.CancellationToken.None);
+            return GetArticlesFeedAsync(limit, offset, System.Threading.CancellationToken.None);
         }
 
         /// <param name="cancellationToken">A cancellation token that can be used by other objects or threads to receive notice of cancellation.</param>
@@ -850,11 +878,11 @@ namespace Conduit.ApiClient
         /// <remarks>
         /// Get most recent articles from users you follow. Use query parameters to limit. Auth is required
         /// </remarks>
-        /// <param name="offset">The number of items to skip before starting to collect the result set.</param>
-        /// <param name="limit">The numbers of items to return.</param>
-        /// <returns>Multiple articles</returns>
+        /// <param name="limit">Limit number of articles returned (default is 20)</param>
+        /// <param name="offset">Offset/skip number of articles (default is 0)</param>
+        /// <returns>OK</returns>
         /// <exception cref="ApiException">A server side error occurred.</exception>
-        public virtual async System.Threading.Tasks.Task<Response3> GetArticlesFeedAsync(int? offset, int? limit, System.Threading.CancellationToken cancellationToken)
+        public virtual async System.Threading.Tasks.Task<MultipleArticlesResponse> GetArticlesFeedAsync(int? limit, int? offset, System.Threading.CancellationToken cancellationToken)
         {
             var client_ = _httpClient;
             var disposeClient_ = false;
@@ -870,13 +898,13 @@ namespace Conduit.ApiClient
                     // Operation Path: "articles/feed"
                     urlBuilder_.Append("articles/feed");
                     urlBuilder_.Append('?');
-                    if (offset != null)
-                    {
-                        urlBuilder_.Append(System.Uri.EscapeDataString("offset")).Append('=').Append(System.Uri.EscapeDataString(ConvertToString(offset, System.Globalization.CultureInfo.InvariantCulture))).Append('&');
-                    }
                     if (limit != null)
                     {
                         urlBuilder_.Append(System.Uri.EscapeDataString("limit")).Append('=').Append(System.Uri.EscapeDataString(ConvertToString(limit, System.Globalization.CultureInfo.InvariantCulture))).Append('&');
+                    }
+                    if (offset != null)
+                    {
+                        urlBuilder_.Append(System.Uri.EscapeDataString("offset")).Append('=').Append(System.Uri.EscapeDataString(ConvertToString(offset, System.Globalization.CultureInfo.InvariantCulture))).Append('&');
                     }
                     urlBuilder_.Length--;
 
@@ -905,7 +933,7 @@ namespace Conduit.ApiClient
                         var status_ = (int)response_.StatusCode;
                         if (status_ == 200)
                         {
-                            var objectResponse_ = await ReadObjectResponseAsync<Response3>(response_, headers_, cancellationToken).ConfigureAwait(false);
+                            var objectResponse_ = await ReadObjectResponseAsync<MultipleArticlesResponse>(response_, headers_, cancellationToken).ConfigureAwait(false);
                             if (objectResponse_.Object == null)
                             {
                                 throw new ApiException("Response was null which was not expected.", status_, objectResponse_.Text, headers_, null);
@@ -957,13 +985,13 @@ namespace Conduit.ApiClient
         /// <param name="tag">Filter by tag</param>
         /// <param name="author">Filter by author (username)</param>
         /// <param name="favorited">Filter by favorites of a user (username)</param>
-        /// <param name="offset">The number of items to skip before starting to collect the result set.</param>
-        /// <param name="limit">The numbers of items to return.</param>
-        /// <returns>Multiple articles</returns>
+        /// <param name="limit">Limit number of articles returned (default is 20)</param>
+        /// <param name="offset">Offset/skip number of articles (default is 0)</param>
+        /// <returns>OK</returns>
         /// <exception cref="ApiException">A server side error occurred.</exception>
-        public virtual System.Threading.Tasks.Task<Response3> GetArticlesAsync(string tag, string author, string favorited, int? offset, int? limit)
+        public virtual System.Threading.Tasks.Task<MultipleArticlesResponse> GetArticlesAsync(string tag, string author, string favorited, int? limit, int? offset)
         {
-            return GetArticlesAsync(tag, author, favorited, offset, limit, System.Threading.CancellationToken.None);
+            return GetArticlesAsync(tag, author, favorited, limit, offset, System.Threading.CancellationToken.None);
         }
 
         /// <param name="cancellationToken">A cancellation token that can be used by other objects or threads to receive notice of cancellation.</param>
@@ -976,11 +1004,11 @@ namespace Conduit.ApiClient
         /// <param name="tag">Filter by tag</param>
         /// <param name="author">Filter by author (username)</param>
         /// <param name="favorited">Filter by favorites of a user (username)</param>
-        /// <param name="offset">The number of items to skip before starting to collect the result set.</param>
-        /// <param name="limit">The numbers of items to return.</param>
-        /// <returns>Multiple articles</returns>
+        /// <param name="limit">Limit number of articles returned (default is 20)</param>
+        /// <param name="offset">Offset/skip number of articles (default is 0)</param>
+        /// <returns>OK</returns>
         /// <exception cref="ApiException">A server side error occurred.</exception>
-        public virtual async System.Threading.Tasks.Task<Response3> GetArticlesAsync(string tag, string author, string favorited, int? offset, int? limit, System.Threading.CancellationToken cancellationToken)
+        public virtual async System.Threading.Tasks.Task<MultipleArticlesResponse> GetArticlesAsync(string tag, string author, string favorited, int? limit, int? offset, System.Threading.CancellationToken cancellationToken)
         {
             var client_ = _httpClient;
             var disposeClient_ = false;
@@ -1008,13 +1036,13 @@ namespace Conduit.ApiClient
                     {
                         urlBuilder_.Append(System.Uri.EscapeDataString("favorited")).Append('=').Append(System.Uri.EscapeDataString(ConvertToString(favorited, System.Globalization.CultureInfo.InvariantCulture))).Append('&');
                     }
-                    if (offset != null)
-                    {
-                        urlBuilder_.Append(System.Uri.EscapeDataString("offset")).Append('=').Append(System.Uri.EscapeDataString(ConvertToString(offset, System.Globalization.CultureInfo.InvariantCulture))).Append('&');
-                    }
                     if (limit != null)
                     {
                         urlBuilder_.Append(System.Uri.EscapeDataString("limit")).Append('=').Append(System.Uri.EscapeDataString(ConvertToString(limit, System.Globalization.CultureInfo.InvariantCulture))).Append('&');
+                    }
+                    if (offset != null)
+                    {
+                        urlBuilder_.Append(System.Uri.EscapeDataString("offset")).Append('=').Append(System.Uri.EscapeDataString(ConvertToString(offset, System.Globalization.CultureInfo.InvariantCulture))).Append('&');
                     }
                     urlBuilder_.Length--;
 
@@ -1043,7 +1071,7 @@ namespace Conduit.ApiClient
                         var status_ = (int)response_.StatusCode;
                         if (status_ == 200)
                         {
-                            var objectResponse_ = await ReadObjectResponseAsync<Response3>(response_, headers_, cancellationToken).ConfigureAwait(false);
+                            var objectResponse_ = await ReadObjectResponseAsync<MultipleArticlesResponse>(response_, headers_, cancellationToken).ConfigureAwait(false);
                             if (objectResponse_.Object == null)
                             {
                                 throw new ApiException("Response was null which was not expected.", status_, objectResponse_.Text, headers_, null);
@@ -1092,11 +1120,12 @@ namespace Conduit.ApiClient
         /// <remarks>
         /// Create an article. Auth is required
         /// </remarks>
-        /// <returns>Single article</returns>
+        /// <param name="article">Article to create</param>
+        /// <returns>OK</returns>
         /// <exception cref="ApiException">A server side error occurred.</exception>
-        public virtual System.Threading.Tasks.Task<Response4> CreateArticleAsync(object body)
+        public virtual System.Threading.Tasks.Task<SingleArticleResponse> CreateArticleAsync(NewArticleRequest article)
         {
-            return CreateArticleAsync(body, System.Threading.CancellationToken.None);
+            return CreateArticleAsync(article, System.Threading.CancellationToken.None);
         }
 
         /// <param name="cancellationToken">A cancellation token that can be used by other objects or threads to receive notice of cancellation.</param>
@@ -1106,17 +1135,21 @@ namespace Conduit.ApiClient
         /// <remarks>
         /// Create an article. Auth is required
         /// </remarks>
-        /// <returns>Single article</returns>
+        /// <param name="article">Article to create</param>
+        /// <returns>OK</returns>
         /// <exception cref="ApiException">A server side error occurred.</exception>
-        public virtual async System.Threading.Tasks.Task<Response4> CreateArticleAsync(object body, System.Threading.CancellationToken cancellationToken)
+        public virtual async System.Threading.Tasks.Task<SingleArticleResponse> CreateArticleAsync(NewArticleRequest article, System.Threading.CancellationToken cancellationToken)
         {
+            if (article == null)
+                throw new System.ArgumentNullException("article");
+
             var client_ = _httpClient;
             var disposeClient_ = false;
             try
             {
                 using (var request_ = new System.Net.Http.HttpRequestMessage())
                 {
-                    var json_ = Newtonsoft.Json.JsonConvert.SerializeObject(body, _settings.Value);
+                    var json_ = Newtonsoft.Json.JsonConvert.SerializeObject(article, _settings.Value);
                     var content_ = new System.Net.Http.StringContent(json_);
                     content_.Headers.ContentType = System.Net.Http.Headers.MediaTypeHeaderValue.Parse("application/json");
                     request_.Content = content_;
@@ -1153,7 +1186,7 @@ namespace Conduit.ApiClient
                         var status_ = (int)response_.StatusCode;
                         if (status_ == 201)
                         {
-                            var objectResponse_ = await ReadObjectResponseAsync<Response4>(response_, headers_, cancellationToken).ConfigureAwait(false);
+                            var objectResponse_ = await ReadObjectResponseAsync<SingleArticleResponse>(response_, headers_, cancellationToken).ConfigureAwait(false);
                             if (objectResponse_.Object == null)
                             {
                                 throw new ApiException("Response was null which was not expected.", status_, objectResponse_.Text, headers_, null);
@@ -1203,9 +1236,9 @@ namespace Conduit.ApiClient
         /// Get an article. Auth not required
         /// </remarks>
         /// <param name="slug">Slug of the article to get</param>
-        /// <returns>Single article</returns>
+        /// <returns>OK</returns>
         /// <exception cref="ApiException">A server side error occurred.</exception>
-        public virtual System.Threading.Tasks.Task<Response4> GetArticleAsync(string slug)
+        public virtual System.Threading.Tasks.Task<SingleArticleResponse> GetArticleAsync(string slug)
         {
             return GetArticleAsync(slug, System.Threading.CancellationToken.None);
         }
@@ -1218,9 +1251,9 @@ namespace Conduit.ApiClient
         /// Get an article. Auth not required
         /// </remarks>
         /// <param name="slug">Slug of the article to get</param>
-        /// <returns>Single article</returns>
+        /// <returns>OK</returns>
         /// <exception cref="ApiException">A server side error occurred.</exception>
-        public virtual async System.Threading.Tasks.Task<Response4> GetArticleAsync(string slug, System.Threading.CancellationToken cancellationToken)
+        public virtual async System.Threading.Tasks.Task<SingleArticleResponse> GetArticleAsync(string slug, System.Threading.CancellationToken cancellationToken)
         {
             if (slug == null)
                 throw new System.ArgumentNullException("slug");
@@ -1265,7 +1298,7 @@ namespace Conduit.ApiClient
                         var status_ = (int)response_.StatusCode;
                         if (status_ == 200)
                         {
-                            var objectResponse_ = await ReadObjectResponseAsync<Response4>(response_, headers_, cancellationToken).ConfigureAwait(false);
+                            var objectResponse_ = await ReadObjectResponseAsync<SingleArticleResponse>(response_, headers_, cancellationToken).ConfigureAwait(false);
                             if (objectResponse_.Object == null)
                             {
                                 throw new ApiException("Response was null which was not expected.", status_, objectResponse_.Text, headers_, null);
@@ -1309,11 +1342,12 @@ namespace Conduit.ApiClient
         /// Update an article. Auth is required
         /// </remarks>
         /// <param name="slug">Slug of the article to update</param>
-        /// <returns>Single article</returns>
+        /// <param name="article">Article to update</param>
+        /// <returns>OK</returns>
         /// <exception cref="ApiException">A server side error occurred.</exception>
-        public virtual System.Threading.Tasks.Task<Response4> UpdateArticleAsync(string slug, object body)
+        public virtual System.Threading.Tasks.Task<SingleArticleResponse> UpdateArticleAsync(string slug, UpdateArticleRequest article)
         {
-            return UpdateArticleAsync(slug, body, System.Threading.CancellationToken.None);
+            return UpdateArticleAsync(slug, article, System.Threading.CancellationToken.None);
         }
 
         /// <param name="cancellationToken">A cancellation token that can be used by other objects or threads to receive notice of cancellation.</param>
@@ -1324,12 +1358,16 @@ namespace Conduit.ApiClient
         /// Update an article. Auth is required
         /// </remarks>
         /// <param name="slug">Slug of the article to update</param>
-        /// <returns>Single article</returns>
+        /// <param name="article">Article to update</param>
+        /// <returns>OK</returns>
         /// <exception cref="ApiException">A server side error occurred.</exception>
-        public virtual async System.Threading.Tasks.Task<Response4> UpdateArticleAsync(string slug, object body, System.Threading.CancellationToken cancellationToken)
+        public virtual async System.Threading.Tasks.Task<SingleArticleResponse> UpdateArticleAsync(string slug, UpdateArticleRequest article, System.Threading.CancellationToken cancellationToken)
         {
             if (slug == null)
                 throw new System.ArgumentNullException("slug");
+
+            if (article == null)
+                throw new System.ArgumentNullException("article");
 
             var client_ = _httpClient;
             var disposeClient_ = false;
@@ -1337,7 +1375,7 @@ namespace Conduit.ApiClient
             {
                 using (var request_ = new System.Net.Http.HttpRequestMessage())
                 {
-                    var json_ = Newtonsoft.Json.JsonConvert.SerializeObject(body, _settings.Value);
+                    var json_ = Newtonsoft.Json.JsonConvert.SerializeObject(article, _settings.Value);
                     var content_ = new System.Net.Http.StringContent(json_);
                     content_.Headers.ContentType = System.Net.Http.Headers.MediaTypeHeaderValue.Parse("application/json");
                     request_.Content = content_;
@@ -1375,7 +1413,7 @@ namespace Conduit.ApiClient
                         var status_ = (int)response_.StatusCode;
                         if (status_ == 200)
                         {
-                            var objectResponse_ = await ReadObjectResponseAsync<Response4>(response_, headers_, cancellationToken).ConfigureAwait(false);
+                            var objectResponse_ = await ReadObjectResponseAsync<SingleArticleResponse>(response_, headers_, cancellationToken).ConfigureAwait(false);
                             if (objectResponse_.Object == null)
                             {
                                 throw new ApiException("Response was null which was not expected.", status_, objectResponse_.Text, headers_, null);
@@ -1425,7 +1463,7 @@ namespace Conduit.ApiClient
         /// Delete an article. Auth is required
         /// </remarks>
         /// <param name="slug">Slug of the article to delete</param>
-        /// <returns>No content</returns>
+        /// <returns>OK</returns>
         /// <exception cref="ApiException">A server side error occurred.</exception>
         public virtual System.Threading.Tasks.Task DeleteArticleAsync(string slug)
         {
@@ -1440,7 +1478,7 @@ namespace Conduit.ApiClient
         /// Delete an article. Auth is required
         /// </remarks>
         /// <param name="slug">Slug of the article to delete</param>
-        /// <returns>No content</returns>
+        /// <returns>OK</returns>
         /// <exception cref="ApiException">A server side error occurred.</exception>
         public virtual async System.Threading.Tasks.Task DeleteArticleAsync(string slug, System.Threading.CancellationToken cancellationToken)
         {
@@ -1531,9 +1569,9 @@ namespace Conduit.ApiClient
         /// Get the comments for an article. Auth is optional
         /// </remarks>
         /// <param name="slug">Slug of the article that you want to get comments for</param>
-        /// <returns>Multiple comments</returns>
+        /// <returns>OK</returns>
         /// <exception cref="ApiException">A server side error occurred.</exception>
-        public virtual System.Threading.Tasks.Task<Response5> GetArticleCommentsAsync(string slug)
+        public virtual System.Threading.Tasks.Task<MultipleCommentsResponse> GetArticleCommentsAsync(string slug)
         {
             return GetArticleCommentsAsync(slug, System.Threading.CancellationToken.None);
         }
@@ -1546,9 +1584,9 @@ namespace Conduit.ApiClient
         /// Get the comments for an article. Auth is optional
         /// </remarks>
         /// <param name="slug">Slug of the article that you want to get comments for</param>
-        /// <returns>Multiple comments</returns>
+        /// <returns>OK</returns>
         /// <exception cref="ApiException">A server side error occurred.</exception>
-        public virtual async System.Threading.Tasks.Task<Response5> GetArticleCommentsAsync(string slug, System.Threading.CancellationToken cancellationToken)
+        public virtual async System.Threading.Tasks.Task<MultipleCommentsResponse> GetArticleCommentsAsync(string slug, System.Threading.CancellationToken cancellationToken)
         {
             if (slug == null)
                 throw new System.ArgumentNullException("slug");
@@ -1594,7 +1632,7 @@ namespace Conduit.ApiClient
                         var status_ = (int)response_.StatusCode;
                         if (status_ == 200)
                         {
-                            var objectResponse_ = await ReadObjectResponseAsync<Response5>(response_, headers_, cancellationToken).ConfigureAwait(false);
+                            var objectResponse_ = await ReadObjectResponseAsync<MultipleCommentsResponse>(response_, headers_, cancellationToken).ConfigureAwait(false);
                             if (objectResponse_.Object == null)
                             {
                                 throw new ApiException("Response was null which was not expected.", status_, objectResponse_.Text, headers_, null);
@@ -1644,11 +1682,12 @@ namespace Conduit.ApiClient
         /// Create a comment for an article. Auth is required
         /// </remarks>
         /// <param name="slug">Slug of the article that you want to create a comment for</param>
-        /// <returns>Single comment</returns>
+        /// <param name="comment">Comment you want to create</param>
+        /// <returns>OK</returns>
         /// <exception cref="ApiException">A server side error occurred.</exception>
-        public virtual System.Threading.Tasks.Task<Response6> CreateArticleCommentAsync(string slug, object body)
+        public virtual System.Threading.Tasks.Task<SingleCommentResponse> CreateArticleCommentAsync(string slug, NewCommentRequest comment)
         {
-            return CreateArticleCommentAsync(slug, body, System.Threading.CancellationToken.None);
+            return CreateArticleCommentAsync(slug, comment, System.Threading.CancellationToken.None);
         }
 
         /// <param name="cancellationToken">A cancellation token that can be used by other objects or threads to receive notice of cancellation.</param>
@@ -1659,12 +1698,16 @@ namespace Conduit.ApiClient
         /// Create a comment for an article. Auth is required
         /// </remarks>
         /// <param name="slug">Slug of the article that you want to create a comment for</param>
-        /// <returns>Single comment</returns>
+        /// <param name="comment">Comment you want to create</param>
+        /// <returns>OK</returns>
         /// <exception cref="ApiException">A server side error occurred.</exception>
-        public virtual async System.Threading.Tasks.Task<Response6> CreateArticleCommentAsync(string slug, object body, System.Threading.CancellationToken cancellationToken)
+        public virtual async System.Threading.Tasks.Task<SingleCommentResponse> CreateArticleCommentAsync(string slug, NewCommentRequest comment, System.Threading.CancellationToken cancellationToken)
         {
             if (slug == null)
                 throw new System.ArgumentNullException("slug");
+
+            if (comment == null)
+                throw new System.ArgumentNullException("comment");
 
             var client_ = _httpClient;
             var disposeClient_ = false;
@@ -1672,7 +1715,7 @@ namespace Conduit.ApiClient
             {
                 using (var request_ = new System.Net.Http.HttpRequestMessage())
                 {
-                    var json_ = Newtonsoft.Json.JsonConvert.SerializeObject(body, _settings.Value);
+                    var json_ = Newtonsoft.Json.JsonConvert.SerializeObject(comment, _settings.Value);
                     var content_ = new System.Net.Http.StringContent(json_);
                     content_.Headers.ContentType = System.Net.Http.Headers.MediaTypeHeaderValue.Parse("application/json");
                     request_.Content = content_;
@@ -1711,7 +1754,7 @@ namespace Conduit.ApiClient
                         var status_ = (int)response_.StatusCode;
                         if (status_ == 200)
                         {
-                            var objectResponse_ = await ReadObjectResponseAsync<Response6>(response_, headers_, cancellationToken).ConfigureAwait(false);
+                            var objectResponse_ = await ReadObjectResponseAsync<SingleCommentResponse>(response_, headers_, cancellationToken).ConfigureAwait(false);
                             if (objectResponse_.Object == null)
                             {
                                 throw new ApiException("Response was null which was not expected.", status_, objectResponse_.Text, headers_, null);
@@ -1762,7 +1805,7 @@ namespace Conduit.ApiClient
         /// </remarks>
         /// <param name="slug">Slug of the article that you want to delete a comment for</param>
         /// <param name="id">ID of the comment you want to delete</param>
-        /// <returns>No content</returns>
+        /// <returns>OK</returns>
         /// <exception cref="ApiException">A server side error occurred.</exception>
         public virtual System.Threading.Tasks.Task DeleteArticleCommentAsync(string slug, int id)
         {
@@ -1778,7 +1821,7 @@ namespace Conduit.ApiClient
         /// </remarks>
         /// <param name="slug">Slug of the article that you want to delete a comment for</param>
         /// <param name="id">ID of the comment you want to delete</param>
-        /// <returns>No content</returns>
+        /// <returns>OK</returns>
         /// <exception cref="ApiException">A server side error occurred.</exception>
         public virtual async System.Threading.Tasks.Task DeleteArticleCommentAsync(string slug, int id, System.Threading.CancellationToken cancellationToken)
         {
@@ -1874,9 +1917,9 @@ namespace Conduit.ApiClient
         /// Favorite an article. Auth is required
         /// </remarks>
         /// <param name="slug">Slug of the article that you want to favorite</param>
-        /// <returns>Single article</returns>
+        /// <returns>OK</returns>
         /// <exception cref="ApiException">A server side error occurred.</exception>
-        public virtual System.Threading.Tasks.Task<Response4> CreateArticleFavoriteAsync(string slug)
+        public virtual System.Threading.Tasks.Task<SingleArticleResponse> CreateArticleFavoriteAsync(string slug)
         {
             return CreateArticleFavoriteAsync(slug, System.Threading.CancellationToken.None);
         }
@@ -1889,9 +1932,9 @@ namespace Conduit.ApiClient
         /// Favorite an article. Auth is required
         /// </remarks>
         /// <param name="slug">Slug of the article that you want to favorite</param>
-        /// <returns>Single article</returns>
+        /// <returns>OK</returns>
         /// <exception cref="ApiException">A server side error occurred.</exception>
-        public virtual async System.Threading.Tasks.Task<Response4> CreateArticleFavoriteAsync(string slug, System.Threading.CancellationToken cancellationToken)
+        public virtual async System.Threading.Tasks.Task<SingleArticleResponse> CreateArticleFavoriteAsync(string slug, System.Threading.CancellationToken cancellationToken)
         {
             if (slug == null)
                 throw new System.ArgumentNullException("slug");
@@ -1938,7 +1981,7 @@ namespace Conduit.ApiClient
                         var status_ = (int)response_.StatusCode;
                         if (status_ == 200)
                         {
-                            var objectResponse_ = await ReadObjectResponseAsync<Response4>(response_, headers_, cancellationToken).ConfigureAwait(false);
+                            var objectResponse_ = await ReadObjectResponseAsync<SingleArticleResponse>(response_, headers_, cancellationToken).ConfigureAwait(false);
                             if (objectResponse_.Object == null)
                             {
                                 throw new ApiException("Response was null which was not expected.", status_, objectResponse_.Text, headers_, null);
@@ -1988,9 +2031,9 @@ namespace Conduit.ApiClient
         /// Unfavorite an article. Auth is required
         /// </remarks>
         /// <param name="slug">Slug of the article that you want to unfavorite</param>
-        /// <returns>Single article</returns>
+        /// <returns>OK</returns>
         /// <exception cref="ApiException">A server side error occurred.</exception>
-        public virtual System.Threading.Tasks.Task<Response4> DeleteArticleFavoriteAsync(string slug)
+        public virtual System.Threading.Tasks.Task<SingleArticleResponse> DeleteArticleFavoriteAsync(string slug)
         {
             return DeleteArticleFavoriteAsync(slug, System.Threading.CancellationToken.None);
         }
@@ -2003,9 +2046,9 @@ namespace Conduit.ApiClient
         /// Unfavorite an article. Auth is required
         /// </remarks>
         /// <param name="slug">Slug of the article that you want to unfavorite</param>
-        /// <returns>Single article</returns>
+        /// <returns>OK</returns>
         /// <exception cref="ApiException">A server side error occurred.</exception>
-        public virtual async System.Threading.Tasks.Task<Response4> DeleteArticleFavoriteAsync(string slug, System.Threading.CancellationToken cancellationToken)
+        public virtual async System.Threading.Tasks.Task<SingleArticleResponse> DeleteArticleFavoriteAsync(string slug, System.Threading.CancellationToken cancellationToken)
         {
             if (slug == null)
                 throw new System.ArgumentNullException("slug");
@@ -2051,7 +2094,7 @@ namespace Conduit.ApiClient
                         var status_ = (int)response_.StatusCode;
                         if (status_ == 200)
                         {
-                            var objectResponse_ = await ReadObjectResponseAsync<Response4>(response_, headers_, cancellationToken).ConfigureAwait(false);
+                            var objectResponse_ = await ReadObjectResponseAsync<SingleArticleResponse>(response_, headers_, cancellationToken).ConfigureAwait(false);
                             if (objectResponse_.Object == null)
                             {
                                 throw new ApiException("Response was null which was not expected.", status_, objectResponse_.Text, headers_, null);
@@ -2100,11 +2143,11 @@ namespace Conduit.ApiClient
         /// <remarks>
         /// Get tags. Auth not required
         /// </remarks>
-        /// <returns>Tags</returns>
+        /// <returns>OK</returns>
         /// <exception cref="ApiException">A server side error occurred.</exception>
-        public virtual System.Threading.Tasks.Task<Response7> GetTagsAsync()
+        public virtual System.Threading.Tasks.Task<TagsResponse> TagsAsync()
         {
-            return GetTagsAsync(System.Threading.CancellationToken.None);
+            return TagsAsync(System.Threading.CancellationToken.None);
         }
 
         /// <param name="cancellationToken">A cancellation token that can be used by other objects or threads to receive notice of cancellation.</param>
@@ -2114,9 +2157,9 @@ namespace Conduit.ApiClient
         /// <remarks>
         /// Get tags. Auth not required
         /// </remarks>
-        /// <returns>Tags</returns>
+        /// <returns>OK</returns>
         /// <exception cref="ApiException">A server side error occurred.</exception>
-        public virtual async System.Threading.Tasks.Task<Response7> GetTagsAsync(System.Threading.CancellationToken cancellationToken)
+        public virtual async System.Threading.Tasks.Task<TagsResponse> TagsAsync(System.Threading.CancellationToken cancellationToken)
         {
             var client_ = _httpClient;
             var disposeClient_ = false;
@@ -2157,7 +2200,7 @@ namespace Conduit.ApiClient
                         var status_ = (int)response_.StatusCode;
                         if (status_ == 200)
                         {
-                            var objectResponse_ = await ReadObjectResponseAsync<Response7>(response_, headers_, cancellationToken).ConfigureAwait(false);
+                            var objectResponse_ = await ReadObjectResponseAsync<TagsResponse>(response_, headers_, cancellationToken).ConfigureAwait(false);
                             if (objectResponse_.Object == null)
                             {
                                 throw new ApiException("Response was null which was not expected.", status_, objectResponse_.Text, headers_, null);
@@ -2317,14 +2360,14 @@ namespace Conduit.ApiClient
         [System.ComponentModel.DataAnnotations.Required(AllowEmptyStrings = true)]
         public string Password { get; set; }
 
-        private System.Collections.Generic.IDictionary<string, object> _additionalProperties;
+    }
 
-        [Newtonsoft.Json.JsonExtensionData]
-        public System.Collections.Generic.IDictionary<string, object> AdditionalProperties
-        {
-            get { return _additionalProperties ?? (_additionalProperties = new System.Collections.Generic.Dictionary<string, object>()); }
-            set { _additionalProperties = value; }
-        }
+    [System.CodeDom.Compiler.GeneratedCode("NJsonSchema", "14.0.7.0 (NJsonSchema v11.0.0.0 (Newtonsoft.Json v13.0.0.0))")]
+    public partial class LoginUserRequest
+    {
+        [Newtonsoft.Json.JsonProperty("user", Required = Newtonsoft.Json.Required.Always)]
+        [System.ComponentModel.DataAnnotations.Required]
+        public LoginUser User { get; set; } = new LoginUser();
 
     }
 
@@ -2343,77 +2386,82 @@ namespace Conduit.ApiClient
         [System.ComponentModel.DataAnnotations.Required(AllowEmptyStrings = true)]
         public string Password { get; set; }
 
-        private System.Collections.Generic.IDictionary<string, object> _additionalProperties;
+    }
 
-        [Newtonsoft.Json.JsonExtensionData]
-        public System.Collections.Generic.IDictionary<string, object> AdditionalProperties
-        {
-            get { return _additionalProperties ?? (_additionalProperties = new System.Collections.Generic.Dictionary<string, object>()); }
-            set { _additionalProperties = value; }
-        }
+    [System.CodeDom.Compiler.GeneratedCode("NJsonSchema", "14.0.7.0 (NJsonSchema v11.0.0.0 (Newtonsoft.Json v13.0.0.0))")]
+    public partial class NewUserRequest
+    {
+        [Newtonsoft.Json.JsonProperty("user", Required = Newtonsoft.Json.Required.Always)]
+        [System.ComponentModel.DataAnnotations.Required]
+        public NewUser User { get; set; } = new NewUser();
 
     }
 
     [System.CodeDom.Compiler.GeneratedCode("NJsonSchema", "14.0.7.0 (NJsonSchema v11.0.0.0 (Newtonsoft.Json v13.0.0.0))")]
     public partial class User
     {
-        [Newtonsoft.Json.JsonProperty("email", Required = Newtonsoft.Json.Required.Always)]
-        [System.ComponentModel.DataAnnotations.Required(AllowEmptyStrings = true)]
-        public string Email { get; set; }
+            [JsonProperty("id")]
+            public int Id { get; set; }
 
-        [Newtonsoft.Json.JsonProperty("token", Required = Newtonsoft.Json.Required.Always)]
-        [System.ComponentModel.DataAnnotations.Required(AllowEmptyStrings = true)]
-        public string Token { get; set; }
+            [JsonProperty("email")]
+            public string Email { get; set; }
 
-        [Newtonsoft.Json.JsonProperty("username", Required = Newtonsoft.Json.Required.Always)]
-        [System.ComponentModel.DataAnnotations.Required(AllowEmptyStrings = true)]
-        public string Username { get; set; }
+            [JsonProperty("token")]
+            public string Token { get; set; }
 
-        [Newtonsoft.Json.JsonProperty("bio", Required = Newtonsoft.Json.Required.Always)]
-        [System.ComponentModel.DataAnnotations.Required(AllowEmptyStrings = true)]
-        public string Bio { get; set; }
+            [JsonProperty("username")]
+            public string Username { get; set; }
 
-        [Newtonsoft.Json.JsonProperty("image", Required = Newtonsoft.Json.Required.Always)]
-        [System.ComponentModel.DataAnnotations.Required(AllowEmptyStrings = true)]
-        public string Image { get; set; }
+            [JsonProperty("bio")]
+            public string Bio { get; set; }
 
-        private System.Collections.Generic.IDictionary<string, object> _additionalProperties;
+            [JsonProperty("image")]
+            public string Image { get; set; }
 
-        [Newtonsoft.Json.JsonExtensionData]
-        public System.Collections.Generic.IDictionary<string, object> AdditionalProperties
-        {
-            get { return _additionalProperties ?? (_additionalProperties = new System.Collections.Generic.Dictionary<string, object>()); }
-            set { _additionalProperties = value; }
-        }
+    }
 
+    [System.CodeDom.Compiler.GeneratedCode("NJsonSchema", "14.0.7.0 (NJsonSchema v11.0.0.0 (Newtonsoft.Json v13.0.0.0))")]
+    public class UserResponse
+    {
+        [JsonProperty("user")]
+        public User User { get; set; }
     }
 
     [System.CodeDom.Compiler.GeneratedCode("NJsonSchema", "14.0.7.0 (NJsonSchema v11.0.0.0 (Newtonsoft.Json v13.0.0.0))")]
     public partial class UpdateUser
     {
-        [Newtonsoft.Json.JsonProperty("email", Required = Newtonsoft.Json.Required.DisallowNull, NullValueHandling = Newtonsoft.Json.NullValueHandling.Ignore)]
+        [Newtonsoft.Json.JsonProperty("email", Required = Newtonsoft.Json.Required.Default, NullValueHandling = Newtonsoft.Json.NullValueHandling.Ignore)]
         public string Email { get; set; }
 
-        [Newtonsoft.Json.JsonProperty("password", Required = Newtonsoft.Json.Required.DisallowNull, NullValueHandling = Newtonsoft.Json.NullValueHandling.Ignore)]
-        public string Password { get; set; }
+        [Newtonsoft.Json.JsonProperty("token", Required = Newtonsoft.Json.Required.Default, NullValueHandling = Newtonsoft.Json.NullValueHandling.Ignore)]
+        public string Token { get; set; }
 
-        [Newtonsoft.Json.JsonProperty("username", Required = Newtonsoft.Json.Required.DisallowNull, NullValueHandling = Newtonsoft.Json.NullValueHandling.Ignore)]
+        [Newtonsoft.Json.JsonProperty("username", Required = Newtonsoft.Json.Required.Default, NullValueHandling = Newtonsoft.Json.NullValueHandling.Ignore)]
         public string Username { get; set; }
 
-        [Newtonsoft.Json.JsonProperty("bio", Required = Newtonsoft.Json.Required.DisallowNull, NullValueHandling = Newtonsoft.Json.NullValueHandling.Ignore)]
+        [Newtonsoft.Json.JsonProperty("bio", Required = Newtonsoft.Json.Required.Default, NullValueHandling = Newtonsoft.Json.NullValueHandling.Ignore)]
         public string Bio { get; set; }
 
-        [Newtonsoft.Json.JsonProperty("image", Required = Newtonsoft.Json.Required.DisallowNull, NullValueHandling = Newtonsoft.Json.NullValueHandling.Ignore)]
+        [Newtonsoft.Json.JsonProperty("image", Required = Newtonsoft.Json.Required.Default, NullValueHandling = Newtonsoft.Json.NullValueHandling.Ignore)]
         public string Image { get; set; }
 
-        private System.Collections.Generic.IDictionary<string, object> _additionalProperties;
+    }
 
-        [Newtonsoft.Json.JsonExtensionData]
-        public System.Collections.Generic.IDictionary<string, object> AdditionalProperties
-        {
-            get { return _additionalProperties ?? (_additionalProperties = new System.Collections.Generic.Dictionary<string, object>()); }
-            set { _additionalProperties = value; }
-        }
+    [System.CodeDom.Compiler.GeneratedCode("NJsonSchema", "14.0.7.0 (NJsonSchema v11.0.0.0 (Newtonsoft.Json v13.0.0.0))")]
+    public partial class UpdateUserRequest
+    {
+        [Newtonsoft.Json.JsonProperty("user", Required = Newtonsoft.Json.Required.Always)]
+        [System.ComponentModel.DataAnnotations.Required]
+        public UpdateUser User { get; set; } = new UpdateUser();
+
+    }
+
+    [System.CodeDom.Compiler.GeneratedCode("NJsonSchema", "14.0.7.0 (NJsonSchema v11.0.0.0 (Newtonsoft.Json v13.0.0.0))")]
+    public partial class ProfileResponse
+    {
+        [Newtonsoft.Json.JsonProperty("profile", Required = Newtonsoft.Json.Required.Always)]
+        [System.ComponentModel.DataAnnotations.Required]
+        public Profile Profile { get; set; } = new Profile();
 
     }
 
@@ -2434,15 +2482,6 @@ namespace Conduit.ApiClient
 
         [Newtonsoft.Json.JsonProperty("following", Required = Newtonsoft.Json.Required.Always)]
         public bool Following { get; set; }
-
-        private System.Collections.Generic.IDictionary<string, object> _additionalProperties;
-
-        [Newtonsoft.Json.JsonExtensionData]
-        public System.Collections.Generic.IDictionary<string, object> AdditionalProperties
-        {
-            get { return _additionalProperties ?? (_additionalProperties = new System.Collections.Generic.Dictionary<string, object>()); }
-            set { _additionalProperties = value; }
-        }
 
     }
 
@@ -2487,14 +2526,26 @@ namespace Conduit.ApiClient
         [System.ComponentModel.DataAnnotations.Required]
         public Profile Author { get; set; } = new Profile();
 
-        private System.Collections.Generic.IDictionary<string, object> _additionalProperties;
+    }
 
-        [Newtonsoft.Json.JsonExtensionData]
-        public System.Collections.Generic.IDictionary<string, object> AdditionalProperties
-        {
-            get { return _additionalProperties ?? (_additionalProperties = new System.Collections.Generic.Dictionary<string, object>()); }
-            set { _additionalProperties = value; }
-        }
+    [System.CodeDom.Compiler.GeneratedCode("NJsonSchema", "14.0.7.0 (NJsonSchema v11.0.0.0 (Newtonsoft.Json v13.0.0.0))")]
+    public partial class SingleArticleResponse
+    {
+        [Newtonsoft.Json.JsonProperty("article", Required = Newtonsoft.Json.Required.Always)]
+        [System.ComponentModel.DataAnnotations.Required]
+        public Article Article { get; set; } = new Article();
+
+    }
+
+    [System.CodeDom.Compiler.GeneratedCode("NJsonSchema", "14.0.7.0 (NJsonSchema v11.0.0.0 (Newtonsoft.Json v13.0.0.0))")]
+    public partial class MultipleArticlesResponse
+    {
+        [Newtonsoft.Json.JsonProperty("articles", Required = Newtonsoft.Json.Required.Always)]
+        [System.ComponentModel.DataAnnotations.Required]
+        public System.Collections.Generic.ICollection<Article> Articles { get; set; } = new System.Collections.ObjectModel.Collection<Article>();
+
+        [Newtonsoft.Json.JsonProperty("articlesCount", Required = Newtonsoft.Json.Required.Always)]
+        public int ArticlesCount { get; set; }
 
     }
 
@@ -2513,40 +2564,40 @@ namespace Conduit.ApiClient
         [System.ComponentModel.DataAnnotations.Required(AllowEmptyStrings = true)]
         public string Body { get; set; }
 
-        [Newtonsoft.Json.JsonProperty("tagList", Required = Newtonsoft.Json.Required.DisallowNull, NullValueHandling = Newtonsoft.Json.NullValueHandling.Ignore)]
+        [Newtonsoft.Json.JsonProperty("tagList", Required = Newtonsoft.Json.Required.Default, NullValueHandling = Newtonsoft.Json.NullValueHandling.Ignore)]
         public System.Collections.Generic.ICollection<string> TagList { get; set; }
 
-        private System.Collections.Generic.IDictionary<string, object> _additionalProperties;
+    }
 
-        [Newtonsoft.Json.JsonExtensionData]
-        public System.Collections.Generic.IDictionary<string, object> AdditionalProperties
-        {
-            get { return _additionalProperties ?? (_additionalProperties = new System.Collections.Generic.Dictionary<string, object>()); }
-            set { _additionalProperties = value; }
-        }
+    [System.CodeDom.Compiler.GeneratedCode("NJsonSchema", "14.0.7.0 (NJsonSchema v11.0.0.0 (Newtonsoft.Json v13.0.0.0))")]
+    public partial class NewArticleRequest
+    {
+        [Newtonsoft.Json.JsonProperty("article", Required = Newtonsoft.Json.Required.Always)]
+        [System.ComponentModel.DataAnnotations.Required]
+        public NewArticle Article { get; set; } = new NewArticle();
 
     }
 
     [System.CodeDom.Compiler.GeneratedCode("NJsonSchema", "14.0.7.0 (NJsonSchema v11.0.0.0 (Newtonsoft.Json v13.0.0.0))")]
     public partial class UpdateArticle
     {
-        [Newtonsoft.Json.JsonProperty("title", Required = Newtonsoft.Json.Required.DisallowNull, NullValueHandling = Newtonsoft.Json.NullValueHandling.Ignore)]
+        [Newtonsoft.Json.JsonProperty("title", Required = Newtonsoft.Json.Required.Default, NullValueHandling = Newtonsoft.Json.NullValueHandling.Ignore)]
         public string Title { get; set; }
 
-        [Newtonsoft.Json.JsonProperty("description", Required = Newtonsoft.Json.Required.DisallowNull, NullValueHandling = Newtonsoft.Json.NullValueHandling.Ignore)]
+        [Newtonsoft.Json.JsonProperty("description", Required = Newtonsoft.Json.Required.Default, NullValueHandling = Newtonsoft.Json.NullValueHandling.Ignore)]
         public string Description { get; set; }
 
-        [Newtonsoft.Json.JsonProperty("body", Required = Newtonsoft.Json.Required.DisallowNull, NullValueHandling = Newtonsoft.Json.NullValueHandling.Ignore)]
+        [Newtonsoft.Json.JsonProperty("body", Required = Newtonsoft.Json.Required.Default, NullValueHandling = Newtonsoft.Json.NullValueHandling.Ignore)]
         public string Body { get; set; }
 
-        private System.Collections.Generic.IDictionary<string, object> _additionalProperties;
+    }
 
-        [Newtonsoft.Json.JsonExtensionData]
-        public System.Collections.Generic.IDictionary<string, object> AdditionalProperties
-        {
-            get { return _additionalProperties ?? (_additionalProperties = new System.Collections.Generic.Dictionary<string, object>()); }
-            set { _additionalProperties = value; }
-        }
+    [System.CodeDom.Compiler.GeneratedCode("NJsonSchema", "14.0.7.0 (NJsonSchema v11.0.0.0 (Newtonsoft.Json v13.0.0.0))")]
+    public partial class UpdateArticleRequest
+    {
+        [Newtonsoft.Json.JsonProperty("article", Required = Newtonsoft.Json.Required.Always)]
+        [System.ComponentModel.DataAnnotations.Required]
+        public UpdateArticle Article { get; set; } = new UpdateArticle();
 
     }
 
@@ -2572,14 +2623,23 @@ namespace Conduit.ApiClient
         [System.ComponentModel.DataAnnotations.Required]
         public Profile Author { get; set; } = new Profile();
 
-        private System.Collections.Generic.IDictionary<string, object> _additionalProperties;
+    }
 
-        [Newtonsoft.Json.JsonExtensionData]
-        public System.Collections.Generic.IDictionary<string, object> AdditionalProperties
-        {
-            get { return _additionalProperties ?? (_additionalProperties = new System.Collections.Generic.Dictionary<string, object>()); }
-            set { _additionalProperties = value; }
-        }
+    [System.CodeDom.Compiler.GeneratedCode("NJsonSchema", "14.0.7.0 (NJsonSchema v11.0.0.0 (Newtonsoft.Json v13.0.0.0))")]
+    public partial class SingleCommentResponse
+    {
+        [Newtonsoft.Json.JsonProperty("comment", Required = Newtonsoft.Json.Required.Always)]
+        [System.ComponentModel.DataAnnotations.Required]
+        public Comment Comment { get; set; } = new Comment();
+
+    }
+
+    [System.CodeDom.Compiler.GeneratedCode("NJsonSchema", "14.0.7.0 (NJsonSchema v11.0.0.0 (Newtonsoft.Json v13.0.0.0))")]
+    public partial class MultipleCommentsResponse
+    {
+        [Newtonsoft.Json.JsonProperty("comments", Required = Newtonsoft.Json.Required.Always)]
+        [System.ComponentModel.DataAnnotations.Required]
+        public System.Collections.Generic.ICollection<Comment> Comments { get; set; } = new System.Collections.ObjectModel.Collection<Comment>();
 
     }
 
@@ -2590,183 +2650,32 @@ namespace Conduit.ApiClient
         [System.ComponentModel.DataAnnotations.Required(AllowEmptyStrings = true)]
         public string Body { get; set; }
 
-        private System.Collections.Generic.IDictionary<string, object> _additionalProperties;
-
-        [Newtonsoft.Json.JsonExtensionData]
-        public System.Collections.Generic.IDictionary<string, object> AdditionalProperties
-        {
-            get { return _additionalProperties ?? (_additionalProperties = new System.Collections.Generic.Dictionary<string, object>()); }
-            set { _additionalProperties = value; }
-        }
-
     }
 
     [System.CodeDom.Compiler.GeneratedCode("NJsonSchema", "14.0.7.0 (NJsonSchema v11.0.0.0 (Newtonsoft.Json v13.0.0.0))")]
-    public partial class GenericErrorModel
-    {
-        [Newtonsoft.Json.JsonProperty("errors", Required = Newtonsoft.Json.Required.Always)]
-        [System.ComponentModel.DataAnnotations.Required]
-        public Errors Errors { get; set; } = new Errors();
-
-        private System.Collections.Generic.IDictionary<string, object> _additionalProperties;
-
-        [Newtonsoft.Json.JsonExtensionData]
-        public System.Collections.Generic.IDictionary<string, object> AdditionalProperties
-        {
-            get { return _additionalProperties ?? (_additionalProperties = new System.Collections.Generic.Dictionary<string, object>()); }
-            set { _additionalProperties = value; }
-        }
-
-    }
-
-    [System.CodeDom.Compiler.GeneratedCode("NJsonSchema", "14.0.7.0 (NJsonSchema v11.0.0.0 (Newtonsoft.Json v13.0.0.0))")]
-    public partial class Response
-    {
-        [Newtonsoft.Json.JsonProperty("user", Required = Newtonsoft.Json.Required.Always)]
-        [System.ComponentModel.DataAnnotations.Required]
-        public User User { get; set; } = new User();
-
-        private System.Collections.Generic.IDictionary<string, object> _additionalProperties;
-
-        [Newtonsoft.Json.JsonExtensionData]
-        public System.Collections.Generic.IDictionary<string, object> AdditionalProperties
-        {
-            get { return _additionalProperties ?? (_additionalProperties = new System.Collections.Generic.Dictionary<string, object>()); }
-            set { _additionalProperties = value; }
-        }
-
-    }
-
-    [System.CodeDom.Compiler.GeneratedCode("NJsonSchema", "14.0.7.0 (NJsonSchema v11.0.0.0 (Newtonsoft.Json v13.0.0.0))")]
-    public partial class Response2
-    {
-        [Newtonsoft.Json.JsonProperty("profile", Required = Newtonsoft.Json.Required.Always)]
-        [System.ComponentModel.DataAnnotations.Required]
-        public Profile Profile { get; set; } = new Profile();
-
-        private System.Collections.Generic.IDictionary<string, object> _additionalProperties;
-
-        [Newtonsoft.Json.JsonExtensionData]
-        public System.Collections.Generic.IDictionary<string, object> AdditionalProperties
-        {
-            get { return _additionalProperties ?? (_additionalProperties = new System.Collections.Generic.Dictionary<string, object>()); }
-            set { _additionalProperties = value; }
-        }
-
-    }
-
-    [System.CodeDom.Compiler.GeneratedCode("NJsonSchema", "14.0.7.0 (NJsonSchema v11.0.0.0 (Newtonsoft.Json v13.0.0.0))")]
-    public partial class Response3
-    {
-        [Newtonsoft.Json.JsonProperty("articles", Required = Newtonsoft.Json.Required.Always)]
-        [System.ComponentModel.DataAnnotations.Required]
-        public System.Collections.Generic.ICollection<Article> Articles { get; set; } = new System.Collections.ObjectModel.Collection<Article>();
-
-        [Newtonsoft.Json.JsonProperty("articlesCount", Required = Newtonsoft.Json.Required.Always)]
-        public int ArticlesCount { get; set; }
-
-        private System.Collections.Generic.IDictionary<string, object> _additionalProperties;
-
-        [Newtonsoft.Json.JsonExtensionData]
-        public System.Collections.Generic.IDictionary<string, object> AdditionalProperties
-        {
-            get { return _additionalProperties ?? (_additionalProperties = new System.Collections.Generic.Dictionary<string, object>()); }
-            set { _additionalProperties = value; }
-        }
-
-    }
-
-    [System.CodeDom.Compiler.GeneratedCode("NJsonSchema", "14.0.7.0 (NJsonSchema v11.0.0.0 (Newtonsoft.Json v13.0.0.0))")]
-    public partial class Response4
-    {
-        [Newtonsoft.Json.JsonProperty("article", Required = Newtonsoft.Json.Required.Always)]
-        [System.ComponentModel.DataAnnotations.Required]
-        public Article Article { get; set; } = new Article();
-
-        private System.Collections.Generic.IDictionary<string, object> _additionalProperties;
-
-        [Newtonsoft.Json.JsonExtensionData]
-        public System.Collections.Generic.IDictionary<string, object> AdditionalProperties
-        {
-            get { return _additionalProperties ?? (_additionalProperties = new System.Collections.Generic.Dictionary<string, object>()); }
-            set { _additionalProperties = value; }
-        }
-
-    }
-
-    [System.CodeDom.Compiler.GeneratedCode("NJsonSchema", "14.0.7.0 (NJsonSchema v11.0.0.0 (Newtonsoft.Json v13.0.0.0))")]
-    public partial class Response5
-    {
-        [Newtonsoft.Json.JsonProperty("comments", Required = Newtonsoft.Json.Required.Always)]
-        [System.ComponentModel.DataAnnotations.Required]
-        public System.Collections.Generic.ICollection<Comment> Comments { get; set; } = new System.Collections.ObjectModel.Collection<Comment>();
-
-        private System.Collections.Generic.IDictionary<string, object> _additionalProperties;
-
-        [Newtonsoft.Json.JsonExtensionData]
-        public System.Collections.Generic.IDictionary<string, object> AdditionalProperties
-        {
-            get { return _additionalProperties ?? (_additionalProperties = new System.Collections.Generic.Dictionary<string, object>()); }
-            set { _additionalProperties = value; }
-        }
-
-    }
-
-    [System.CodeDom.Compiler.GeneratedCode("NJsonSchema", "14.0.7.0 (NJsonSchema v11.0.0.0 (Newtonsoft.Json v13.0.0.0))")]
-    public partial class Response6
+    public partial class NewCommentRequest
     {
         [Newtonsoft.Json.JsonProperty("comment", Required = Newtonsoft.Json.Required.Always)]
         [System.ComponentModel.DataAnnotations.Required]
-        public Comment Comment { get; set; } = new Comment();
-
-        private System.Collections.Generic.IDictionary<string, object> _additionalProperties;
-
-        [Newtonsoft.Json.JsonExtensionData]
-        public System.Collections.Generic.IDictionary<string, object> AdditionalProperties
-        {
-            get { return _additionalProperties ?? (_additionalProperties = new System.Collections.Generic.Dictionary<string, object>()); }
-            set { _additionalProperties = value; }
-        }
+        public NewComment Comment { get; set; } = new NewComment();
 
     }
 
     [System.CodeDom.Compiler.GeneratedCode("NJsonSchema", "14.0.7.0 (NJsonSchema v11.0.0.0 (Newtonsoft.Json v13.0.0.0))")]
-    public partial class Response7
+    public partial class TagsResponse
     {
         [Newtonsoft.Json.JsonProperty("tags", Required = Newtonsoft.Json.Required.Always)]
         [System.ComponentModel.DataAnnotations.Required]
         public System.Collections.Generic.ICollection<string> Tags { get; set; } = new System.Collections.ObjectModel.Collection<string>();
 
-        private System.Collections.Generic.IDictionary<string, object> _additionalProperties;
-
-        [Newtonsoft.Json.JsonExtensionData]
-        public System.Collections.Generic.IDictionary<string, object> AdditionalProperties
-        {
-            get { return _additionalProperties ?? (_additionalProperties = new System.Collections.Generic.Dictionary<string, object>()); }
-            set { _additionalProperties = value; }
-        }
-
     }
 
     [System.CodeDom.Compiler.GeneratedCode("NJsonSchema", "14.0.7.0 (NJsonSchema v11.0.0.0 (Newtonsoft.Json v13.0.0.0))")]
-    public partial class Errors
+    public class GenericErrorModel
     {
-        [Newtonsoft.Json.JsonProperty("body", Required = Newtonsoft.Json.Required.Always)]
-        [System.ComponentModel.DataAnnotations.Required]
-        public System.Collections.Generic.ICollection<string> Body { get; set; } = new System.Collections.ObjectModel.Collection<string>();
-
-        private System.Collections.Generic.IDictionary<string, object> _additionalProperties;
-
-        [Newtonsoft.Json.JsonExtensionData]
-        public System.Collections.Generic.IDictionary<string, object> AdditionalProperties
-        {
-            get { return _additionalProperties ?? (_additionalProperties = new System.Collections.Generic.Dictionary<string, object>()); }
-            set { _additionalProperties = value; }
-        }
-
+        [JsonProperty("errors")]
+        public Dictionary<string, List<string>> Errors { get; set; }
     }
-
-
 
     [System.CodeDom.Compiler.GeneratedCode("NSwag", "14.0.7.0 (NJsonSchema v11.0.0.0 (Newtonsoft.Json v13.0.0.0))")]
     public partial class ApiException : System.Exception
