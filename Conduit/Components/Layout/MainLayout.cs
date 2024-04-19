@@ -1,4 +1,4 @@
-using System.Runtime.CompilerServices;
+using Microsoft.AspNetCore.Components.Routing;
 
 namespace Conduit.Components.Layout;
 
@@ -22,36 +22,63 @@ public class MainLayout : Blazique.Web.Component
                 ])])])
     ];
 
-    public static Node fragment(RenderFragment renderFragment, [CallerLineNumber] int nodeId = 0) =>
-        (component, builder) =>
-            renderFragment.Invoke(builder);
+    public Node Navbar() =>
+        IsUserLoggedIn()
+            ? NavBarForLoggedInUsers()
+            : NavBarForUsersThatAreNotLoggedIn();
 
-    public Node Navbar()
+    private bool IsUserLoggedIn()
+    {
+        return false;
+    }
+
+    private static Node NavBarForLoggedInUsers()
     {
         return nav([@class(["navbar", "navbar-light"])], [
-            div([@class(["container"])], [
+                    div([@class(["container"])], [
                      a([@class(["navbar-brand"]), href(["/"])], [text("conduit")]),
                      ul([@class(["nav", "navbar-nav", "pull-xs-right"])], [
                          li([@class(["nav-item"])], [
-                             a([@class(["nav-link"]), href(["/"])], [text("Home")])
+                             navLink(NavLinkMatch.All, [@class(["nav-link"]), href(["/"])], [text("Home")])
                          ]),
                          li([@class(["nav-item"])], [
-                             a([@class(["nav-link"]), href(["/editor"])], [
+                             navLink(NavLinkMatch.All, [@class(["nav-link"]), href(["/editor"])], [
                                  i([@class(["ion-compose"])], []),
-                                 text(" New Post")
+                                 text(" New Article")
                              ])
                          ]),
                          li([@class(["nav-item"])], [
-                             a([@class(["nav-link"]), href(["/settings"])], [
+                             navLink(NavLinkMatch.All, [@class(["nav-link"]), href(["/settings"])], [
                                  i([@class(["ion-gear-a"])], []),
                                  text(" Settings")
                              ])
                          ]),
-                         li([@class(["nav-item"])], [
-                             a([@class(["nav-link"]), href(["/register"])], [text("Sign up")])
-                         ])
+                        li([@class(["nav-item"])], [
+                            a([@class(["nav-link"]), href(["/profile/username"])], [text("username")])
+                        ])
                      ])
                  ])
-        ]);
+                ]);
+    }
+
+    private static Node NavBarForUsersThatAreNotLoggedIn()
+    {
+        return
+            nav([@class(["navbar", "navbar-light"])], [
+                div([@class(["container"])], [
+                    a([@class(["navbar-brand"]), href(["/"])], [text("conduit")]),
+                    ul([@class(["nav", "navbar-nav", "pull-xs-right"])], [
+                        li([@class(["nav-item"])], [
+                            navLink(NavLinkMatch.All,[@class(["nav-link"]), href(["/"])], [text("Home")])
+                        ]),
+                        li([@class(["nav-item"])], [
+                            navLink(NavLinkMatch.All,[@class(["nav-link"]), href(["/login"])], [text("Sign in")])
+                        ]),
+                        li([@class(["nav-item"])], [
+                            navLink(NavLinkMatch.All,[@class(["nav-link"]), href(["/register"])], [text("Sign up")])
+                        ])
+                    ])
+                ])
+            ]);
     }
 }

@@ -132,17 +132,13 @@ public class Register : Component<RegisterModel, RegisterCommand>
 [ValidatedMember<string, Radix.Data.String.Validity.IsNotNullEmptyOrWhiteSpace>("UserName")]
 [ValidatedMember<string, Radix.Data.String.Validity.IsNotNullEmptyOrWhiteSpace>("Email")]
 [ValidatedMember<string, Radix.Data.String.Validity.IsNotNullEmptyOrWhiteSpace>("Password")]
-
 public partial record Registration;
 
-
 public interface RegisterCommand;
-
-public record SetUserName(string? UserName) : RegisterCommand;
-public record SetEmail(string? Email) : RegisterCommand;
-public record SetPassword(string? Password) : RegisterCommand;
-public record RegisterUser(Validated<Registration> Command) : RegisterCommand;
-
+    public record SetUserName(string? UserName) : RegisterCommand;
+    public record SetEmail(string? Email) : RegisterCommand;
+    public record SetPassword(string? Password) : RegisterCommand;
+    public record RegisterUser(Validated<Registration> Command) : RegisterCommand;
 
 public record RegisterModel
 {
