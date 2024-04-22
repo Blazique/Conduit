@@ -3,23 +3,27 @@ using Microsoft.AspNetCore.Components.Web;
 using Radix;
 using Radix.Data;
 using Microsoft.AspNetCore.Components.Server.ProtectedBrowserStorage;
+using Conduit.Domain;
+using static Radix.Control.Result.Extensions;
 
 namespace Conduit.Components;
 
-
-
 [Route("/Register")]
-[InteractiveServerRenderMode]
+[InteractiveServerRenderMode(Prerender = true)]
 public class Register : Component<RegisterModel, RegisterCommand>
 {
     [Inject]
+    public Domain.Login Login { get; set; } = (_, __) => Task.FromResult(Error<Domain.User, string>("Login function has not been added to dependency container"));
+
+    [Inject]
+    public CreateUser CreateUser { get; set; } = (_, __, ___) => Task.FromResult(Error<Domain.User, string[]>(["CreateUser function has not been added to dependency container"]));
+    
+    [Inject]
     public NavigationManager? Navigation { get; set; }
 
+    
     [Inject]
-    public RealWorldClient? ApiClient { get; set; }
-
-    [Inject]
-    public ProtectedLocalStorage? LocalStorage { get; set; }
+    public MessageBus MessageBus { get; set; } = null!;
 
     public override async ValueTask<RegisterModel> Update(RegisterModel model, RegisterCommand command)
     {
@@ -33,30 +37,25 @@ public class Register : Component<RegisterModel, RegisterCommand>
                             {
                                 try
                                 {
-                                    var response = await ApiClient!.CreateUserAsync(new NewUserRequest
-                                    {
-                                        User = new NewUser
-                                        {
-                                            Username = model.UserName,
-                                            Email = model.Email,
-                                            Password = model.Password
-                                        }
-                                    });
-
-                                    var loginResponse = await ApiClient.LoginAsync(new LoginUserRequest
-                                    {
-                                        User = new LoginUser
-                                        {
-                                            Email = model.Email,
-                                            Password = model.Password
-                                        }
-                                    });
-
-                                    // Store the user in protected local storage
-                                    await LocalStorage!.SetAsync(LocalStorageKey.User, loginResponse.User);
-
-                                    // Redirect to the home page
-                                    Navigation!.NavigateTo("/");
+                                    var createUserResponse = await CreateUser(model.UserName, model.Email, model.Password);
+                                    switch(createUserResponse){
+                                        case Ok<Domain.User, string[]> _:
+                                            var loginResponse = await Login(model.Email, model.Password);
+                                            switch(loginResponse){
+                                                case Ok<Domain.User, string>(var user) when user != null:
+                                                    MessageBus.Publish(new UserLoggedIn(user));
+                                                    // Redirect to the home page
+                                                    Navigation!.NavigateTo("/");
+                                                    break;
+                                                case Error<Domain.User, string>(var error):
+                                                    model = model with { Errors = [error] };
+                                                    break;
+                                            }     
+                                            break;
+                                        case Error<Domain.User, string[]>(var errors):
+                                            model = model with { Errors = errors };
+                                            break;
+                                    }                           
                                 }
                                 catch (ApiException<GenericErrorModel> e)
                                 {

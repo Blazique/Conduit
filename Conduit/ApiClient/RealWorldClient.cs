@@ -2424,7 +2424,7 @@ namespace Conduit.ApiClient
     public class UserResponse
     {
         [JsonProperty("user")]
-        public User User { get; set; }
+        public User UserDto { get; set; }
     }
 
     [System.CodeDom.Compiler.GeneratedCode("NJsonSchema", "14.0.7.0 (NJsonSchema v11.0.0.0 (Newtonsoft.Json v13.0.0.0))")]
