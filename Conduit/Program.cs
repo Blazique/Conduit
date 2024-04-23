@@ -58,6 +58,19 @@ Func<ProtectedSessionStorage, GetUser> getUser = (ProtectedSessionStorage sessio
     return user.Value is not null ? Some(user.Value) : None<Conduit.Domain.User>();
 };
 
+Func<RealWorldClient, GetProfile> getProfile =  (RealWorldClient client) => async (string username) =>
+{
+    try
+    {
+        var response = await client.GetProfileByUsernameAsync(username);
+        return Some(response.Profile);
+    }
+    catch (Exception e)
+    {
+        return None<ProfileDto>();
+    }
+};
+
 var builder = WebApplication.CreateBuilder(args);
 
 // Add services to the container.
@@ -69,6 +82,7 @@ builder.Services
 builder.Services.AddScoped(provider => loginUser(realWorldClient, provider.GetService<ProtectedSessionStorage>()));
 builder.Services.AddSingleton((_) => createUser(realWorldClient));
 builder.Services.AddScoped(provider => getUser(provider.GetService<ProtectedSessionStorage>()));
+builder.Services.AddSingleton((_) => getProfile(realWorldClient));
 builder.Services.AddSingleton<MessageBus>();
 
 

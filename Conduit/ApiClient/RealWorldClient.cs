@@ -2460,18 +2460,18 @@ namespace Conduit.ApiClient
     {
         [Newtonsoft.Json.JsonProperty("profile", Required = Newtonsoft.Json.Required.Always)]
         [System.ComponentModel.DataAnnotations.Required]
-        public Profile Profile { get; set; } = new Profile();
+        public ProfileDto Profile { get; set; } = new ProfileDto();
 
     }
 
     [System.CodeDom.Compiler.GeneratedCode("NJsonSchema", "14.0.7.0 (NJsonSchema v11.0.0.0 (Newtonsoft.Json v13.0.0.0))")]
-    public partial class Profile
+    public partial class ProfileDto
     {
         [Newtonsoft.Json.JsonProperty("username", Required = Newtonsoft.Json.Required.Always)]
         [System.ComponentModel.DataAnnotations.Required(AllowEmptyStrings = true)]
         public string Username { get; set; }
 
-        [Newtonsoft.Json.JsonProperty("bio", Required = Newtonsoft.Json.Required.Always)]
+        [Newtonsoft.Json.JsonProperty("bio", Required = Newtonsoft.Json.Required.AllowNull)]
         [System.ComponentModel.DataAnnotations.Required(AllowEmptyStrings = true)]
         public string Bio { get; set; }
 
@@ -2523,7 +2523,7 @@ namespace Conduit.ApiClient
 
         [Newtonsoft.Json.JsonProperty("author", Required = Newtonsoft.Json.Required.Always)]
         [System.ComponentModel.DataAnnotations.Required]
-        public Profile Author { get; set; } = new Profile();
+        public ProfileDto Author { get; set; } = new ProfileDto();
 
     }
 
@@ -2620,7 +2620,7 @@ namespace Conduit.ApiClient
 
         [Newtonsoft.Json.JsonProperty("author", Required = Newtonsoft.Json.Required.Always)]
         [System.ComponentModel.DataAnnotations.Required]
-        public Profile Author { get; set; } = new Profile();
+        public ProfileDto Author { get; set; } = new ProfileDto();
 
     }
 
