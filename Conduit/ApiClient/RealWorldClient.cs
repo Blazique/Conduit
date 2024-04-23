@@ -473,7 +473,6 @@ namespace Conduit.ApiClient
                         if (status_ == 200)
                         {
                             var userResponse = JsonConvert.DeserializeObject<UserResponse>(response_.Content.ReadAsStringAsync().Result);
-                            Console.WriteLine(userResponse);
                             var objectResponse_ = await ReadObjectResponseAsync<UserResponse>(response_, headers_, cancellationToken).ConfigureAwait(false);
                             if (objectResponse_.Object == null)
                             {
@@ -2350,7 +2349,7 @@ namespace Conduit.ApiClient
     }
 
     [System.CodeDom.Compiler.GeneratedCode("NJsonSchema", "14.0.7.0 (NJsonSchema v11.0.0.0 (Newtonsoft.Json v13.0.0.0))")]
-    public partial class LoginUser
+    public partial class LoginUserDto
     {
         [Newtonsoft.Json.JsonProperty("email", Required = Newtonsoft.Json.Required.Always)]
         [System.ComponentModel.DataAnnotations.Required(AllowEmptyStrings = true)]
@@ -2367,7 +2366,7 @@ namespace Conduit.ApiClient
     {
         [Newtonsoft.Json.JsonProperty("user", Required = Newtonsoft.Json.Required.Always)]
         [System.ComponentModel.DataAnnotations.Required]
-        public LoginUser User { get; set; } = new LoginUser();
+        public LoginUserDto User { get; set; } = new LoginUserDto();
 
     }
 

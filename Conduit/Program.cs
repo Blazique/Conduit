@@ -15,12 +15,13 @@ Func<RealWorldClient, ProtectedSessionStorage, Conduit.Domain.Login> loginUser =
     {
         var response = await client.LoginAsync(new LoginUserRequest
         {
-            User = new LoginUser
+            User = new LoginUserDto
             {
                 Email = email,
                 Password = password
             }
         });
+        
         await sessionStorage.SetAsync(LocalStorageKey.User, response.UserDto.ToUser());
         return Ok<Conduit.Domain.User, string>(response.UserDto.ToUser());
     }

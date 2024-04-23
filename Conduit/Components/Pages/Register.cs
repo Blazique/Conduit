@@ -76,13 +76,13 @@ public class Register : Component<RegisterModel, RegisterCommand>
                     
                 }
                 break;
-            case SetUserName(var userName):
+            case SetUserNameForRegistration(var userName):
                 model = model with { UserName = userName };
                 break;
-            case SetEmail(var email):
+            case SetEmailForRegistration(var email):
                 model = model with { Email = email };
                 break;
-            case SetPassword(var password):
+            case SetPasswordForRegistration(var password):
                 model = model with { Password = password };
                 break;
         }
@@ -105,13 +105,13 @@ public class Register : Component<RegisterModel, RegisterCommand>
                         ),
                         form([], [
                             fieldset([@class(["form-group"])], [
-                                input([@class(["form-control", "form-control-lg"]), type(["text"]), placeholder(["Username"]), value([model.UserName ?? ""]), on.change(a => dispatch(new SetUserName((string?)a.Value)))], [])
+                                input([@class(["form-control", "form-control-lg"]), type(["text"]), placeholder(["Username"]), value([model.UserName ?? ""]), on.change(a => dispatch(new SetUserNameForRegistration((string?)a.Value)))], [])
                             ]),
                             fieldset([@class(["form-group"])], [
-                                input([@class(["form-control", "form-control-lg"]), type(["email"]), placeholder(["Email"]), value([model.Email ?? ""]), on.change(a => dispatch(new SetEmail((string?)a.Value)))], [])
+                                input([@class(["form-control", "form-control-lg"]), type(["email"]), placeholder(["Email"]), value([model.Email ?? ""]), on.change(a => dispatch(new SetEmailForRegistration((string?)a.Value)))], [])
                             ]),
                             fieldset([@class(["form-group"])], [
-                                input([@class(["form-control", "form-control-lg"]), type(["password"]), placeholder(["Password"]), value([model.Password ?? ""]), on.change(a => dispatch(new SetPassword((string?)a.Value)))], [])
+                                input([@class(["form-control", "form-control-lg"]), type(["password"]), placeholder(["Password"]), value([model.Password ?? ""]), on.change(a => dispatch(new SetPasswordForRegistration((string?)a.Value)))], [])
                             ]),
                             button([@class(["btn", "btn-lg", "btn-primary", "pull-xs-right"]), type(["button"]), 
                             on.click(args => {
@@ -134,10 +134,10 @@ public class Register : Component<RegisterModel, RegisterCommand>
 public partial record Registration;
 
 public interface RegisterCommand;
-    public record SetUserName(string? UserName) : RegisterCommand;
-    public record SetEmail(string? Email) : RegisterCommand;
-    public record SetPassword(string? Password) : RegisterCommand;
-    public record RegisterUser(Validated<Registration> Command) : RegisterCommand;
+    public record SetUserNameForRegistration(string? UserName) : RegisterCommand;
+    public record SetEmailForRegistration(string? Email) : RegisterCommand;
+    public record SetPasswordForRegistration(string? Password) : RegisterCommand;
+    public record RegisterUser(Validated<Registration> validatedRegistration) : RegisterCommand;
 
 public record RegisterModel
 {

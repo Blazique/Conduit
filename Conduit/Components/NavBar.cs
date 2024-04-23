@@ -95,7 +95,6 @@ public class NavBar : Blazique.Web.Component
 
     private static Node NavBarForLoggedInUsers(User user)
     {
-        Console.WriteLine($"User: {user}");
         return nav([@class(["navbar", "navbar-light"])], [
                     div([@class(["container"])], [
                      a([@class(["navbar-brand"]), href(["/"])], [text("conduit")]),
