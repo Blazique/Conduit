@@ -94,7 +94,7 @@ public class Profile : Component<ProfilePageModel, ProfilePageCommand>
                                             button([@class(["btn", "btn-outline-primary", "btn-sm", "pull-xs-right"])], [
                                                 i([@class(["ion-heart"])], []),
                                         ]),
-                                        a([href(["/article/how-to-buil-webapps-that-scale"]), @class(["preview-link"])], [
+                                        a([href([$"/article/{article.Slug}"]), @class(["preview-link"])], [
                                             h1([], [text(article.Title)]),
                                             p([], [text(article.Description)]),
                                             span([], [text("Read more...")]),
