@@ -91,6 +91,12 @@ Func<RealWorldClient, GetTags> getTags = (RealWorldClient client) => async () =>
     return [.. response.Tags];
 };
 
+Func<RealWorldClient, Conduit.Domain.MarkArticleAsFavorite> markArticleAsFavorite = (RealWorldClient client) => async (string slug, string token) =>
+{
+    client.SetAuthorizationHeader("Bearer", token);
+    await client.CreateArticleFavoriteAsync(slug);
+};
+
 var builder = WebApplication.CreateBuilder(args);
 
 // Add services to the container.
@@ -105,6 +111,7 @@ builder.Services.AddScoped(provider => getUser(provider.GetService<ProtectedSess
 builder.Services.AddSingleton((_) => getProfile(realWorldClient));
 builder.Services.AddSingleton((_) => getArticlesFeed(realWorldClient));
 builder.Services.AddSingleton((_) => getAllRecentArticles(realWorldClient));
+builder.Services.AddSingleton((_) => markArticleAsFavorite(realWorldClient));
 builder.Services.AddSingleton((_) => getTags(realWorldClient));
 builder.Services.AddSingleton<MessageBus>();
 

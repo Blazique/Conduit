@@ -37,3 +37,5 @@ public delegate Task<ArticleFeed> GetArticlesFeed(string token, int? limit, int?
 public delegate Task<ArticleFeed> GetAllRecentArticles(int? limit, int? offset, string? tag = null);
 
 public delegate Task<string[]> GetTags();
+
+public delegate Task MarkArticleAsFavorite(string slug, string token);

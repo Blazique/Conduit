@@ -21,6 +21,9 @@ public class Home : Component<HomePageModel, HomePageCommand>
     public GetArticlesFeed GetArticlesFeed { get; set; } = (_, _, _) => Task.FromResult(new ArticleFeed(0,[]));
 
     [Inject]
+    public Domain.MarkArticleAsFavorite MarkArticleAsFavorite { get; set; } = (_, _) => Task.CompletedTask;
+
+    [Inject]
     public GetTags GetTags { get; set; } = () => Task.FromResult(new string[0]);
 
     protected override async Task OnInitializedAsync()
@@ -50,45 +53,43 @@ public class Home : Component<HomePageModel, HomePageCommand>
         {
             case ChangeHomeFeedPage changeHomeFeedPage:
                 model.Page = changeHomeFeedPage.Page;
-                switch(model.SelectedFeed)
-                {
-                    case SelectedFeed.YourFeed:
-                        model.Feed = await GetArticlesFeed(model.User.Token, model.PageSize, (model.Page - 1) * model.PageSize);
-                        break;
-                    case SelectedFeed.GlobalFeed:
-                        model.Feed = await GetAllRecentArticlesFeed(model.PageSize, (model.Page - 1) * model.PageSize);
-                        break;
-                    case SelectedFeed.SelectedPopularTag:
-                        model.Feed = await GetAllRecentArticlesFeed(model.PageSize, (model.Page - 1) * model.PageSize, model.SelectedPopularTag);
-                        break;
-                }
+                await RefreshFeed(model);
                 break;
             case SetFeed setFeed:
                 model.SelectedFeed = setFeed.SelectedFeed;
                 model.Page = 1;
-                switch(model.SelectedFeed)
-                {
-                    case SelectedFeed.YourFeed:
-                        model.Feed = await GetArticlesFeed(model.User.Token, model.PageSize, (model.Page - 1) * model.PageSize);
-                        break;
-                    case SelectedFeed.GlobalFeed:
-                        model.Feed = await GetAllRecentArticlesFeed(model.PageSize, 0);
-                        break;
-                    case SelectedFeed.SelectedPopularTag:
-                        model.Feed = await GetAllRecentArticlesFeed(model.PageSize, (model.Page - 1) * model.PageSize, model.SelectedPopularTag);
-                        break;
-                }
+                await RefreshFeed(model);
                 model.TotalPages = model.Feed is not null ? (model.Feed.ArticlesCount +  model.PageSize - 1) /  model.PageSize : 0;
                 break;
             case SelectPopularTag selectPopularTag:
                 model.SelectedPopularTag = selectPopularTag.Tag;
                 model.SelectedFeed = SelectedFeed.SelectedPopularTag;
                 model.Page = 1;
-                model.Feed = await GetAllRecentArticlesFeed(model.PageSize, 0, model.SelectedPopularTag);
+                model.Feed = await GetAllRecentArticlesFeed(model.PageSize, (model.Page - 1) * model.PageSize, model.SelectedPopularTag);
                 model.TotalPages = model.Feed is not null ? (model.Feed.ArticlesCount +  model.PageSize - 1) /  model.PageSize : 0;
+                break;
+            case MarkArticleAsFavorite markArticleAsFavorite:
+                await MarkArticleAsFavorite(markArticleAsFavorite.Article.Slug, model.User.Token);
+                await RefreshFeed(model);
                 break;
         }
         return model;
+
+        async Task RefreshFeed(HomePageModel model)
+        {
+            switch (model.SelectedFeed)
+            {
+                case SelectedFeed.YourFeed:
+                    model.Feed = await GetArticlesFeed(model.User.Token, model.PageSize, (model.Page - 1) * model.PageSize);
+                    break;
+                case SelectedFeed.GlobalFeed:
+                    model.Feed = await GetAllRecentArticlesFeed(model.PageSize, (model.Page - 1) * model.PageSize);
+                    break;
+                case SelectedFeed.SelectedPopularTag:
+                    model.Feed = await GetAllRecentArticlesFeed(model.PageSize, (model.Page - 1) * model.PageSize, model.SelectedPopularTag);
+                    break;
+            }
+        }
     }
 
     public override Node[] View(HomePageModel model, Func<HomePageCommand, Task> dispatch)
@@ -126,8 +127,9 @@ public class Home : Component<HomePageModel, HomePageCommand>
                                                 a([@class(["author"]), href([$"/profile/{article.Author.Username}"])], [
                                                     text(article.Author.Username)]),],
                                                 span([@class(["date"])], [text("January 20th")])),
-                                            button([@class(["btn", "btn-outline-primary", "btn-sm", "pull-xs-right"])], [
+                                            button([@class(["btn", "btn-outline-primary", "btn-sm", "pull-xs-right"]), on.click(_ => dispatch(new MarkArticleAsFavorite(article)))], [
                                                 i([@class(["ion-heart"])], []),
+                                                text($" {article.FavoritesCount}")
                                         ]),
                                         a([href([$"/article/{article.Slug}"]), @class(["preview-link"])], [
                                             h1([], [text(article.Title)]),
@@ -150,7 +152,7 @@ public class Home : Component<HomePageModel, HomePageCommand>
                             p([], [text("Popular Tags")]),
                             div([@class(["tag-list"])], [
                                 .. model.Tags is not null 
-                                ? model.Tags.Select(tag => a([@class(["tag-pill", "tag-default"]), on.click(_ => dispatch(new SelectPopularTag(tag)))], [text(tag)])).ToArray()
+                                ? model.Tags.Select(tag => a([@class(["tag-pill", "tag-default"]), attribute("style", ["cursor:hand"]), on.click(_ => dispatch(new SelectPopularTag(tag)))], [text(tag)])).ToArray()
                                 : []
                             ])
                         ])
@@ -160,6 +162,8 @@ public class Home : Component<HomePageModel, HomePageCommand>
         ])
     ];
 }
+
+internal record MarkArticleAsFavorite(Domain.Article Article) : HomePageCommand;
 
 internal record SelectPopularTag(string Tag) : HomePageCommand;
 
