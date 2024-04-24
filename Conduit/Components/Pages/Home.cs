@@ -15,10 +15,13 @@ public class Home : Component<HomePageModel, HomePageCommand>
     public GetUser GetUser { get; set; } = () => Task.FromResult(None<Domain.User>());
 
     [Inject]
-    public GetAllRecentArticles GetAllRecentArticlesFeed { get; set; } = (_, _) => Task.FromResult(new ArticleFeed(0,[]));
+    public GetAllRecentArticles GetAllRecentArticlesFeed { get; set; } = (_, _, _) => Task.FromResult(new ArticleFeed(0,[]));
 
     [Inject]
     public GetArticlesFeed GetArticlesFeed { get; set; } = (_, _, _) => Task.FromResult(new ArticleFeed(0,[]));
+
+    [Inject]
+    public GetTags GetTags { get; set; } = () => Task.FromResult(new string[0]);
 
     protected override async Task OnInitializedAsync()
     {
@@ -27,6 +30,7 @@ public class Home : Component<HomePageModel, HomePageCommand>
         Model.Page = 1;
         Model.Feed = await GetAllRecentArticlesFeed(Model.PageSize, 0);
         Model.TotalPages = (Model.Feed.ArticlesCount +  Model.PageSize - 1) /  Model.PageSize;
+        Model.Tags = await GetTags();
 
         switch (await GetUser())
         {
@@ -46,13 +50,16 @@ public class Home : Component<HomePageModel, HomePageCommand>
         {
             case ChangeHomeFeedPage changeHomeFeedPage:
                 model.Page = changeHomeFeedPage.Page;
-                switch(Model.SelectedFeed)
+                switch(model.SelectedFeed)
                 {
                     case SelectedFeed.YourFeed:
-                        model.Feed = await GetArticlesFeed(Model.User.Token, Model.PageSize, (Model.Page - 1) * Model.PageSize);
+                        model.Feed = await GetArticlesFeed(model.User.Token, model.PageSize, (model.Page - 1) * model.PageSize);
                         break;
                     case SelectedFeed.GlobalFeed:
                         model.Feed = await GetAllRecentArticlesFeed(model.PageSize, (model.Page - 1) * model.PageSize);
+                        break;
+                    case SelectedFeed.SelectedPopularTag:
+                        model.Feed = await GetAllRecentArticlesFeed(model.PageSize, (model.Page - 1) * model.PageSize, model.SelectedPopularTag);
                         break;
                 }
                 break;
@@ -62,13 +69,23 @@ public class Home : Component<HomePageModel, HomePageCommand>
                 switch(model.SelectedFeed)
                 {
                     case SelectedFeed.YourFeed:
-                        model.Feed = await GetArticlesFeed(Model.User.Token, Model.PageSize, (Model.Page - 1) * Model.PageSize);
+                        model.Feed = await GetArticlesFeed(model.User.Token, model.PageSize, (model.Page - 1) * model.PageSize);
                         break;
                     case SelectedFeed.GlobalFeed:
                         model.Feed = await GetAllRecentArticlesFeed(model.PageSize, 0);
                         break;
+                    case SelectedFeed.SelectedPopularTag:
+                        model.Feed = await GetAllRecentArticlesFeed(model.PageSize, (model.Page - 1) * model.PageSize, model.SelectedPopularTag);
+                        break;
                 }
-                model.TotalPages = model.Feed is not null ? (model.Feed.ArticlesCount +  model.PageSize - 1) /  Model.PageSize : 0;
+                model.TotalPages = model.Feed is not null ? (model.Feed.ArticlesCount +  model.PageSize - 1) /  model.PageSize : 0;
+                break;
+            case SelectPopularTag selectPopularTag:
+                model.SelectedPopularTag = selectPopularTag.Tag;
+                model.SelectedFeed = SelectedFeed.SelectedPopularTag;
+                model.Page = 1;
+                model.Feed = await GetAllRecentArticlesFeed(model.PageSize, 0, model.SelectedPopularTag);
+                model.TotalPages = model.Feed is not null ? (model.Feed.ArticlesCount +  model.PageSize - 1) /  model.PageSize : 0;
                 break;
         }
         return model;
@@ -93,7 +110,10 @@ public class Home : Component<HomePageModel, HomePageCommand>
                             ]),
                             li([@class(["nav-item"])], [
                                 a([@class(["nav-link", model.SelectedFeed == SelectedFeed.GlobalFeed ? "active" : ""]), attribute("style", ["cursor:hand"]), on.click(_ => dispatch(new SetFeed(SelectedFeed.GlobalFeed)))], [text("Global Feed")])
-                            ])
+                            ]),
+                            !string.IsNullOrEmpty(model.SelectedPopularTag) ? li([@class(["nav-item"])], [
+                                a([@class(["nav-link", model.SelectedFeed == SelectedFeed.SelectedPopularTag ? "active" : ""]), attribute("style", ["cursor:hand"]), on.click(_ => dispatch(new SetFeed(SelectedFeed.SelectedPopularTag)))], [text($"#{model.SelectedPopularTag}")])
+                            ]) : empty()
                         ])
                     ]),
                     .. model.Feed is not null 
@@ -129,14 +149,9 @@ public class Home : Component<HomePageModel, HomePageCommand>
                         div([@class(["sidebar"])], [
                             p([], [text("Popular Tags")]),
                             div([@class(["tag-list"])], [
-                                a([@class(["tag-pill", "tag-default"]), href([""])], [text("programming")]),
-                                a([@class(["tag-pill", "tag-default"]), href([""])], [text("javascript")]),
-                                a([@class(["tag-pill", "tag-default"]), href([""])], [text("emberjs")]),
-                                a([@class(["tag-pill", "tag-default"]), href([""])], [text("angularjs")]),
-                                a([@class(["tag-pill", "tag-default"]), href([""])], [text("react")]),
-                                a([@class(["tag-pill", "tag-default"]), href([""])], [text("mean")]),
-                                a([@class(["tag-pill", "tag-default"]), href([""])], [text("node")]),
-                                a([@class(["tag-pill", "tag-default"]), href([""])], [text("rails")])
+                                .. model.Tags is not null 
+                                ? model.Tags.Select(tag => a([@class(["tag-pill", "tag-default"]), on.click(_ => dispatch(new SelectPopularTag(tag)))], [text(tag)])).ToArray()
+                                : []
                             ])
                         ])
                     ])
@@ -145,6 +160,8 @@ public class Home : Component<HomePageModel, HomePageCommand>
         ])
     ];
 }
+
+internal record SelectPopularTag(string Tag) : HomePageCommand;
 
 internal record SetFeed : HomePageCommand
 {
@@ -167,11 +184,14 @@ public record HomePageModel
     public int Page { get; internal set; }
     public ArticleFeed? Feed { get; internal set; }
     public int TotalPages { get; internal set; }
-    public User User { get; internal set; }
+    public User? User { get; internal set; }
+    public string? SelectedPopularTag { get; internal set; }
+    public string[]? Tags { get; internal set; }
 }
 
 public enum SelectedFeed
 {
     YourFeed,
-    GlobalFeed
+    GlobalFeed,
+    SelectedPopularTag
 }

@@ -34,4 +34,6 @@ public delegate Task<Radix.Data.Option<Profile>> GetProfile(string username);
 
 public delegate Task<ArticleFeed> GetArticlesFeed(string token, int? limit, int? offset);
 
-public delegate Task<ArticleFeed> GetAllRecentArticles(int? limit, int? offset);
+public delegate Task<ArticleFeed> GetAllRecentArticles(int? limit, int? offset, string? tag = null);
+
+public delegate Task<string[]> GetTags();

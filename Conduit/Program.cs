@@ -72,9 +72,9 @@ Func<RealWorldClient, GetProfile> getProfile =  (RealWorldClient client) => asyn
     }
 };
 
-Func<RealWorldClient, GetAllRecentArticles> getAllRecentArticles =  (RealWorldClient client) => async (int? limit, int? offset) =>
+Func<RealWorldClient, GetAllRecentArticles> getAllRecentArticles =  (RealWorldClient client) => async (int? limit, int? offset, string? tag = null) =>
 {
-    var response = await client.GetArticlesAsync(null, null, null, limit, offset);
+    var response = await client.GetArticlesAsync(tag, null, null, limit, offset);
     return new ArticleFeed(response.ArticlesCount, response.Articles.Select(article => article.ToArticle()).ToList());
 };
 
@@ -83,6 +83,12 @@ Func<RealWorldClient, GetArticlesFeed> getArticlesFeed = (RealWorldClient client
     client.SetAuthorizationHeader("Bearer", token);
     var response = await realWorldClient.GetArticlesFeedAsync(limit, offset);
     return new ArticleFeed(response.ArticlesCount, response.Articles.Select(article => article.ToArticle()).ToList());
+};
+
+Func<RealWorldClient, GetTags> getTags = (RealWorldClient client) => async () =>
+{
+    var response = await realWorldClient.TagsAsync();
+    return [.. response.Tags];
 };
 
 var builder = WebApplication.CreateBuilder(args);
@@ -99,6 +105,7 @@ builder.Services.AddScoped(provider => getUser(provider.GetService<ProtectedSess
 builder.Services.AddSingleton((_) => getProfile(realWorldClient));
 builder.Services.AddSingleton((_) => getArticlesFeed(realWorldClient));
 builder.Services.AddSingleton((_) => getAllRecentArticles(realWorldClient));
+builder.Services.AddSingleton((_) => getTags(realWorldClient));
 builder.Services.AddSingleton<MessageBus>();
 
 
