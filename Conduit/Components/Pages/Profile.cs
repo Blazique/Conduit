@@ -7,11 +7,17 @@ using static Radix.Control.Option.Extensions;
 namespace Conduit.Components;
 
 [Route("/Profile/{username}")]
-[InteractiveServerRenderMode(Prerender = true)]
-public class Profile : Blazique.Web.Component
+[InteractiveServerRenderMode(Prerender = false)]
+public class Profile : Component<ProfilePageModel, ProfilePageCommand>
 {
     [Inject]
-    public GetProfile GetProfile { get; set; } = (_) => Task.FromResult(None<ProfileDto>());
+    public GetProfile GetProfile { get; set; } = (_) => Task.FromResult(None<Domain.Profile>());
+
+    [Inject]
+    public GetUser GetUser { get; set; } = () => Task.FromResult(None<Domain.User>());
+
+    [Inject]
+    public GetArticlesFeed GetArticlesFeed { get; set; } = (_, _, _) => Task.FromResult(new ArticleFeed(0,[]));
 
     [Inject]
     public NavigationManager? Navigation { get; set; }
@@ -19,31 +25,44 @@ public class Profile : Blazique.Web.Component
     [Parameter]
     public string Username { get; set; } = "";
 
-    private Option<Domain.Profile> _profile = None<Domain.Profile>();
-
     protected override async Task OnInitializedAsync()
     {
-        var profileOption = await GetProfile(Username);   
-        _profile = profileOption.Map(profile => profile.ToProfile());
-        await base.OnInitializedAsync();
+        Model.PageSize = 10;
+        Model.Page = 1;
+        switch (await GetProfile(Username))
+        {
+            case Some<Domain.Profile>(var profile):
+                Model.Profile = profile;
+                break;
+            case None<Domain.Profile>:
+                break;
+        }
+        switch (await GetUser())
+        {
+            case Some<Domain.User>(var user):
+                Model.User = user;
+                Model.Feed = await GetArticlesFeed(user.Token, Model.PageSize, 0);
+                Model.TotalPages = (Model.Feed.ArticlesCount +  Model.PageSize - 1) /  Model.PageSize;
+                break;
+            case None<Domain.User>:
+                break;
+        }
     }
 
-    public override Node[] Render()
-    =>
-    _profile switch
-    {
-        Some<Domain.Profile>(var profile) => 
+    public override Node[] View(ProfilePageModel model, Func<ProfilePageCommand, Task> dispatch)
+    => 
+        model.Profile is not null ? 
             [        
                 div([@class(["profile-page"])], [
                     div([@class(["user-info"])], [
                         div([@class(["container"])], [
                             div([@class(["row"])], [
                                 div([@class(["col-xs-12", "col-md-10", "offset-md-1"])], [
-                                    img([@class(["user-img"]), src([profile.Image])], []),
-                                    h4([], [text(profile.Username)]),
-                                    p([], [text(profile.Bio ?? "")]),
+                                    img([@class(["user-img"]), src([model.Profile.Image])], []),
+                                    h4([], [text(model.Profile.Username)]),
+                                    p([], [text(model.Profile.Bio ?? "")]),
                                     button([@class(["btn", "btn-sm", "btn-outline-secondary", "action-btn"])], 
-                                        [i([@class(["ion-plus-round"])], [text($" Follow {profile.Username}")])]),
+                                        [i([@class(["ion-plus-round"])], [text($" Follow {model.Profile.Username}")])]),
                                     button([@class(["btn", "btn-sm", "btn-outline-secondary", "action-btn"])], 
                                         [i([@class(["ion-gear-a"]), on.click(_ => Navigation?.NavigateTo("/settings"))], [text(" Edit Profile Settings")]),
 
@@ -62,59 +81,66 @@ public class Profile : Blazique.Web.Component
                                     ])
                                 ])
                             ]),
-                            div([@class(["article-preview"])], [
-                                div([@class(["article-meta"])], [
-                                    a([href([$"/profile/{profile.Username}"])], [
-                                        img([src(["http://i.imgur.com/Qr71crq.jpg"])], [])]),
-                                    div([@class(["info"])], [
-                                        a([@class(["author"]), href(["/profile/eric-simons"])], [
-                                            text("Eric Simons")])],
-                                        span([@class(["date"])], [text("January 20th")])),
-                                    button([@class(["btn", "btn-outline-primary", "btn-sm", "pull-xs-right"])], [
-                                        i([@class(["ion-heart"])], []),
-                                ]),
-                                a([href(["/article/how-to-buil-webapps-that-scale"]), @class(["preview-link"])], [
-                                    h1([], [text("How to build webapps that scale")]),
-                                    p([], [text("This is the description for the post.")]),
-                                    span([], [text("Read more...")]),
-                                    ul([@class(["tag-list"])], [
-                                        li([@class(["tag-pill", "tag-default"])], [text("realworld")]),
-                                        li([@class(["tag-pill", "tag-default"])], [text("implementations")])
-                                    ])
+                            .. model.Feed is not null 
+                                ? model.Feed.Articles.Select(article =>
+                                    div([@class(["article-preview"])], [
+                                        div([@class(["article-meta"])], [
+                                            a([href([$"/profile/{article.Author.Username}"])], [
+                                                img([src([article.Author.Image])], [])]),
+                                            div([@class(["info"])], [
+                                                a([@class(["author"]), href([$"/profile/{article.Author.Username}"])], [
+                                                    text(article.Author.Username)]),],
+                                                span([@class(["date"])], [text("January 20th")])),
+                                            button([@class(["btn", "btn-outline-primary", "btn-sm", "pull-xs-right"])], [
+                                                i([@class(["ion-heart"])], []),
+                                        ]),
+                                        a([href(["/article/how-to-buil-webapps-that-scale"]), @class(["preview-link"])], [
+                                            h1([], [text(article.Title)]),
+                                            p([], [text(article.Description)]),
+                                            span([], [text("Read more...")]),
+                                            ul([@class(["tag-list"])], article.TagList.Select(tag =>
+                                                li([@class(["tag-pill", "tag-default"])], [text(tag)])).ToArray()),
+                                                
+                                        ])
+                                    ])])).ToArray()
+                                : [],
+                            ul([@class(["pagination"])], Enumerable.Range(1, model.TotalPages).Select(page =>
+                                li([@class(["page-item", page == model.Page ? "active" : ""])], [
+                                    button([@class(["page-link"]), on.click((_) => dispatch(new ChangeProfileFeedPage(page)))], [text(page.ToString())])
                                 ])
-                            ])]),
-                            div([@class(["article-preview"])], [
-                                div([@class(["article-meta"])], [
-                                    a([href(["/profile/albert-pai"])], [
-                                        img([src(["http://i.imgur.com/N4VcUeJ.jpg"])], [])]),
-                                    div([@class(["info"])], [
-                                        a([@class(["author"]), href(["/profile/albert-pai"])], [
-                                            text("Albert Pai")])],
-                                        span([@class(["date"])], [text("January 20th")])),
-                                    button([@class(["btn", "btn-outline-primary", "btn-sm", "pull-xs-right"])], [
-                                        i([@class(["ion-heart"])], [])])]),
-                                a([href(["/article/the-song-you"]), @class(["preview-link"])], [
-                                    h1([], [text("The song you won't ever stop singing. No matter how hard you try.")]),
-                                    p([], [text("This is the description for the post.")]),
-                                    span([], [text("Read more...")]),
-                                    ul([@class(["tag-list"])], [
-                                        li([@class(["tag-pill", "tag-default"])], [text("Music")]),
-                                        li([@class(["tag-pill", "tag-default"])], [text("Song")])
-                                    ])
-                                ])
-                            ]),
-                            ul([@class(["pagination"])], [
-                                li([@class(["page-item"])], [
-                                    a([@class(["page-link"]), href([""])], [text("1")])]),
-                                li([@class(["page-item"])], [
-                                    a([@class(["page-link"]), href([""])], [text("2")])])
-                            ])
+                            ).ToArray())
                         ])
                     ])
                 ])
-            ],
-        _ => [
-            div([@class(["alert", "alert-warning"])], [text("Profile not found")])
-        ]
-    };
+            ]
+        :
+            [
+                div([@class(["alert", "alert-warning"])], [text("Profile not found")])
+            ];
+
+        public override async ValueTask<ProfilePageModel> Update(ProfilePageModel model, ProfilePageCommand command)
+        {
+            switch (command)
+            {
+                case ChangeProfileFeedPage(var page):
+                    model.Page = page;
+                    model.Feed = Model.User is not null ? await GetArticlesFeed(Model.User.Token, Model.PageSize, (Model.Page - 1) * Model.PageSize) : new ArticleFeed(0, []);
+                    break;
+            }
+            return model;
+        }
+    }
+
+public interface ProfilePageCommand;
+
+internal record ChangeProfileFeedPage(int Page) : ProfilePageCommand;
+
+public record ProfilePageModel
+{
+    public Domain.Profile? Profile { get; internal set; } 
+    public Domain.User? User { get; internal set; }
+    public int PageSize { get; internal set; }
+    public int Page { get; internal set; }
+    public ArticleFeed? Feed { get; internal set; }
+    public int TotalPages { get; internal set; }
 }

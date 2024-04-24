@@ -42,6 +42,11 @@ namespace Conduit.ApiClient
             _httpClient = httpClient;
         }
 
+        public void SetAuthorizationHeader(string scheme, string parameter)
+        {
+            _httpClient.DefaultRequestHeaders.Authorization = new System.Net.Http.Headers.AuthenticationHeaderValue(scheme, parameter);
+        }
+
         private static Newtonsoft.Json.JsonSerializerSettings CreateSerializerSettings()
         {
             var settings = new Newtonsoft.Json.JsonSerializerSettings();
@@ -2485,7 +2490,7 @@ namespace Conduit.ApiClient
     }
 
     [System.CodeDom.Compiler.GeneratedCode("NJsonSchema", "14.0.7.0 (NJsonSchema v11.0.0.0 (Newtonsoft.Json v13.0.0.0))")]
-    public partial class Article
+    public partial class ArticleDto
     {
         [Newtonsoft.Json.JsonProperty("slug", Required = Newtonsoft.Json.Required.Always)]
         [System.ComponentModel.DataAnnotations.Required(AllowEmptyStrings = true)]
@@ -2532,7 +2537,7 @@ namespace Conduit.ApiClient
     {
         [Newtonsoft.Json.JsonProperty("article", Required = Newtonsoft.Json.Required.Always)]
         [System.ComponentModel.DataAnnotations.Required]
-        public Article Article { get; set; } = new Article();
+        public ArticleDto Article { get; set; } = new ArticleDto();
 
     }
 
@@ -2541,7 +2546,7 @@ namespace Conduit.ApiClient
     {
         [Newtonsoft.Json.JsonProperty("articles", Required = Newtonsoft.Json.Required.Always)]
         [System.ComponentModel.DataAnnotations.Required]
-        public System.Collections.Generic.ICollection<Article> Articles { get; set; } = new System.Collections.ObjectModel.Collection<Article>();
+        public System.Collections.Generic.ICollection<ArticleDto> Articles { get; set; } = new System.Collections.ObjectModel.Collection<ArticleDto>();
 
         [Newtonsoft.Json.JsonProperty("articlesCount", Required = Newtonsoft.Json.Required.Always)]
         public int ArticlesCount { get; set; }

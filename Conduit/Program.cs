@@ -6,6 +6,7 @@ using Radix;
 using static Radix.Control.Result.Extensions;
 using static Radix.Control.Option.Extensions;
 using Conduit;
+using System.Net.Http.Headers;
 
 var realWorldClient = new RealWorldClient("https://api.realworld.io/api/", new HttpClient());
 
@@ -63,12 +64,25 @@ Func<RealWorldClient, GetProfile> getProfile =  (RealWorldClient client) => asyn
     try
     {
         var response = await client.GetProfileByUsernameAsync(username);
-        return Some(response.Profile);
+        return Some(response.Profile.ToProfile());
     }
     catch (Exception e)
     {
-        return None<ProfileDto>();
+        return None<Conduit.Domain.Profile>();
     }
+};
+
+Func<RealWorldClient, GetAllRecentArticles> getAllRecentArticles =  (RealWorldClient client) => async (int? limit, int? offset) =>
+{
+    var response = await client.GetArticlesAsync(null, null, null, limit, offset);
+    return new ArticleFeed(response.ArticlesCount, response.Articles.Select(article => article.ToArticle()).ToList());
+};
+
+Func<RealWorldClient, GetArticlesFeed> getArticlesFeed = (RealWorldClient client) => async (string token, int? limit, int? offset) =>
+{
+    client.SetAuthorizationHeader("Bearer", token);
+    var response = await realWorldClient.GetArticlesFeedAsync(limit, offset);
+    return new ArticleFeed(response.ArticlesCount, response.Articles.Select(article => article.ToArticle()).ToList());
 };
 
 var builder = WebApplication.CreateBuilder(args);
@@ -83,6 +97,8 @@ builder.Services.AddScoped(provider => loginUser(realWorldClient, provider.GetSe
 builder.Services.AddSingleton((_) => createUser(realWorldClient));
 builder.Services.AddScoped(provider => getUser(provider.GetService<ProtectedSessionStorage>()));
 builder.Services.AddSingleton((_) => getProfile(realWorldClient));
+builder.Services.AddSingleton((_) => getArticlesFeed(realWorldClient));
+builder.Services.AddSingleton((_) => getAllRecentArticles(realWorldClient));
 builder.Services.AddSingleton<MessageBus>();
 
 
