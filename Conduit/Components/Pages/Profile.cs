@@ -25,14 +25,14 @@ public class Profile : Component<ProfilePageModel, ProfilePageCommand>
     [Parameter]
     public string Username { get; set; } = "";
 
-    protected override async Task OnInitializedAsync()
+    protected override async Task<ProfilePageModel> Initialize(ProfilePageModel model)
     {
-        Model.PageSize = 10;
-        Model.Page = 1;
+        model.PageSize = 10;
+        model.Page = 1;
         switch (await GetProfile(Username))
         {
             case Some<Domain.Profile>(var profile):
-                Model.Profile = profile;
+                model.Profile = profile;
                 break;
             case None<Domain.Profile>:
                 break;
@@ -40,13 +40,15 @@ public class Profile : Component<ProfilePageModel, ProfilePageCommand>
         switch (await GetUser())
         {
             case Some<Domain.User>(var user):
-                Model.User = user;
-                Model.Feed = await GetArticlesFeed(user.Token, Model.PageSize, 0);
-                Model.TotalPages = (Model.Feed.ArticlesCount +  Model.PageSize - 1) /  Model.PageSize;
+                model.User = user;
+                model.Feed = await GetArticlesFeed(user.Token, model.PageSize, 0);
+                model.TotalPages = (model.Feed.ArticlesCount +  model.PageSize - 1) /  model.PageSize;
                 break;
             case None<Domain.User>:
                 break;
         }
+
+        return model;
     }
 
     public override Node[] View(ProfilePageModel model, Func<ProfilePageCommand, Task> dispatch)
@@ -103,7 +105,9 @@ public class Profile : Component<ProfilePageModel, ProfilePageCommand>
                                                 
                                         ])
                                     ])])).ToArray()
-                                : [],
+                                : [div([@class(["spinner-border"]), role(["status"])], [
+                                        span([@class(["sr-only"])], [text("Loading...")])
+                                    ])],
                             ul([@class(["pagination"])], Enumerable.Range(1, model.TotalPages).Select(page =>
                                 li([@class(["page-item", page == model.Page ? "active" : ""])], [
                                     button([@class(["page-link"]), on.click((_) => dispatch(new ChangeProfileFeedPage(page)))], [text(page.ToString())])

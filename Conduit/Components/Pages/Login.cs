@@ -33,7 +33,7 @@ public class Login : Component<LoginPageModel, LoginPageCommand>
                 switch (validatedCredentials)
                 {                
                     case Valid<Credentials>(var credentials):
-                        var loginResponse = await PerformLogin(credentials.Email, credentials.Password);
+                        var loginResponse = await PerformLogin(credentials.Email, credentials.Password)!;
                                 
                         switch (loginResponse)
                         {
@@ -42,7 +42,7 @@ public class Login : Component<LoginPageModel, LoginPageCommand>
                                 // Redirect to the home page
                                 Navigation!.NavigateTo("/");
                                 break;
-                            case Error<Domain.User, string>(var error):
+                            case Error<User, string>(var error):
                                 model = model with { Errors = [error] };
                                 break;
                         }

@@ -19,9 +19,11 @@
 
 namespace Conduit.ApiClient
 {
+    using System;
     using System.Text.Json;
     using Newtonsoft.Json;
     using Radix;
+    using Radix.Data;
     using System = global::System;
 
     [System.CodeDom.Compiler.GeneratedCode("NSwag", "14.0.7.0 (NJsonSchema v11.0.0.0 (Newtonsoft.Json v13.0.0.0))")]
@@ -2606,7 +2608,7 @@ namespace Conduit.ApiClient
     }
 
     [System.CodeDom.Compiler.GeneratedCode("NJsonSchema", "14.0.7.0 (NJsonSchema v11.0.0.0 (Newtonsoft.Json v13.0.0.0))")]
-    public partial class Comment
+    public partial class CommentDto
     {
         [Newtonsoft.Json.JsonProperty("id", Required = Newtonsoft.Json.Required.Always)]
         public int Id { get; set; }
@@ -2634,7 +2636,7 @@ namespace Conduit.ApiClient
     {
         [Newtonsoft.Json.JsonProperty("comment", Required = Newtonsoft.Json.Required.Always)]
         [System.ComponentModel.DataAnnotations.Required]
-        public Comment Comment { get; set; } = new Comment();
+        public CommentDto Comment { get; set; } = new CommentDto();
 
     }
 
@@ -2643,12 +2645,12 @@ namespace Conduit.ApiClient
     {
         [Newtonsoft.Json.JsonProperty("comments", Required = Newtonsoft.Json.Required.Always)]
         [System.ComponentModel.DataAnnotations.Required]
-        public System.Collections.Generic.ICollection<Comment> Comments { get; set; } = new System.Collections.ObjectModel.Collection<Comment>();
+        public System.Collections.Generic.ICollection<CommentDto> Comments { get; set; } = new System.Collections.ObjectModel.Collection<CommentDto>();
 
     }
 
     [System.CodeDom.Compiler.GeneratedCode("NJsonSchema", "14.0.7.0 (NJsonSchema v11.0.0.0 (Newtonsoft.Json v13.0.0.0))")]
-    public partial class NewComment
+    public partial class NewCommentDto
     {
         [Newtonsoft.Json.JsonProperty("body", Required = Newtonsoft.Json.Required.Always)]
         [System.ComponentModel.DataAnnotations.Required(AllowEmptyStrings = true)]
@@ -2661,7 +2663,7 @@ namespace Conduit.ApiClient
     {
         [Newtonsoft.Json.JsonProperty("comment", Required = Newtonsoft.Json.Required.Always)]
         [System.ComponentModel.DataAnnotations.Required]
-        public NewComment Comment { get; set; } = new NewComment();
+        public NewCommentDto Comment { get; set; } = new NewCommentDto();
 
     }
 

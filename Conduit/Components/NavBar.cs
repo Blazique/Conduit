@@ -1,12 +1,10 @@
-namespace Conduit.Components;
 
-using System;
 using Conduit.Domain;
-using Microsoft.AspNetCore.Components.Rendering;
 using Microsoft.AspNetCore.Components.Routing;
 using Microsoft.AspNetCore.Components.Web;
 using Radix.Data;
 
+namespace Conduit.Components;
 
 [InteractiveServerRenderMode(Prerender = false)]
 public class NavBar : Blazique.Web.Component

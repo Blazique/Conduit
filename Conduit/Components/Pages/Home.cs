@@ -1,4 +1,5 @@
 
+using System.Runtime.CompilerServices;
 using Blazique.Web.Html.Names.Elements;
 using Conduit.Domain;
 using Radix.Data;
@@ -9,47 +10,48 @@ namespace Conduit.Components;
 [Route("/")]
 [InteractiveServerRenderMode(Prerender = false)]
 public class Home : Component<HomePageModel, HomePageCommand>
-{   
+{
 
     [Inject]
-    public GetUser GetUser { get; set; } = () => Task.FromResult(None<Domain.User>());
+    public GetUser GetUser { get; set; } = () => Task.FromResult(None<User>());
 
     [Inject]
-    public GetAllRecentArticles GetAllRecentArticlesFeed { get; set; } = (_, _, _) => Task.FromResult(new ArticleFeed(0,[]));
+    public GetAllRecentArticles GetAllRecentArticlesFeed { get; set; } = (_, _, _) => Task.FromResult(new ArticleFeed(0, []));
 
     [Inject]
-    public GetArticlesFeed GetArticlesFeed { get; set; } = (_, _, _) => Task.FromResult(new ArticleFeed(0,[]));
+    public GetArticlesFeed GetArticlesFeed { get; set; } = (_, _, _) => Task.FromResult(new ArticleFeed(0, []));
 
     [Inject]
     public Domain.MarkArticleAsFavorite MarkArticleAsFavorite { get; set; } = (_, _) => Task.CompletedTask;
 
     [Inject]
-    public GetTags GetTags { get; set; } = () => Task.FromResult(new string[0]);
+    public GetTags GetTags { get; set; } = () => Task.FromResult(Array.Empty<string>());
 
-    protected override async Task OnInitializedAsync()
+    protected override async Task<HomePageModel> Initialize(HomePageModel model) 
     {
-        Model.SelectedFeed = SelectedFeed.GlobalFeed;
-        Model.PageSize = 10;
-        Model.Page = 1;
-        Model.Feed = await GetAllRecentArticlesFeed(Model.PageSize, 0);
-        Model.TotalPages = (Model.Feed.ArticlesCount +  Model.PageSize - 1) /  Model.PageSize;
-        Model.Tags = await GetTags();
+        model.SelectedFeed = SelectedFeed.GlobalFeed;
+        model.PageSize = 10;
+        model.Page = 1;
+        model.Feed = await GetAllRecentArticlesFeed(model.PageSize, 0);
+        model.TotalPages = (model.Feed.ArticlesCount + model.PageSize - 1) / model.PageSize;
+        model.Tags = await GetTags();
 
         switch (await GetUser())
         {
             case Some<User>(User user):
-                Model.User = user;
-                Model.Feed = await GetAllRecentArticlesFeed(Model.PageSize, (Model.Page - 1) * Model.PageSize);
-                Model.TotalPages = (Model.Feed.ArticlesCount +  Model.PageSize - 1) /  Model.PageSize;
+                model.User = user;
+                model.Feed = await GetAllRecentArticlesFeed(model.PageSize, (model.Page - 1) * model.PageSize);
+                model.TotalPages = (model.Feed.ArticlesCount + model.PageSize - 1) / model.PageSize;
                 break;
             case None<User>:
                 break;
         }
+        return model;
     }
 
     public override async ValueTask<HomePageModel> Update(HomePageModel model, HomePageCommand command)
     {
-        switch(command)
+        switch (command)
         {
             case ChangeHomeFeedPage changeHomeFeedPage:
                 model.Page = changeHomeFeedPage.Page;
@@ -59,14 +61,14 @@ public class Home : Component<HomePageModel, HomePageCommand>
                 model.SelectedFeed = setFeed.SelectedFeed;
                 model.Page = 1;
                 await RefreshFeed(model);
-                model.TotalPages = model.Feed is not null ? (model.Feed.ArticlesCount +  model.PageSize - 1) /  model.PageSize : 0;
+                model.TotalPages = model.Feed is not null ? (model.Feed.ArticlesCount + model.PageSize - 1) / model.PageSize : 0;
                 break;
             case SelectPopularTag selectPopularTag:
                 model.SelectedPopularTag = selectPopularTag.Tag;
                 model.SelectedFeed = SelectedFeed.SelectedPopularTag;
                 model.Page = 1;
                 model.Feed = await GetAllRecentArticlesFeed(model.PageSize, (model.Page - 1) * model.PageSize, model.SelectedPopularTag);
-                model.TotalPages = model.Feed is not null ? (model.Feed.ArticlesCount +  model.PageSize - 1) /  model.PageSize : 0;
+                model.TotalPages = model.Feed is not null ? (model.Feed.ArticlesCount + model.PageSize - 1) / model.PageSize : 0;
                 break;
             case MarkArticleAsFavorite markArticleAsFavorite:
                 await MarkArticleAsFavorite(markArticleAsFavorite.Article.Slug, model.User.Token);
@@ -104,60 +106,64 @@ public class Home : Component<HomePageModel, HomePageCommand>
         div([@class(["container page"])], [
             div([@class(["row"])], [
                 div([@class(["col-md-9"])], [
-                    div([@class(["feed-toggle"])], [
-                        ul([@class(["nav", "nav-pills", "outline-active"])], [
-                            li([@class(["nav-item"])], [
-                                a([@class(["nav-link", model.SelectedFeed == SelectedFeed.YourFeed ? "active" : ""]), attribute("style", ["cursor:hand"]), on.click(_ => dispatch(new SetFeed(SelectedFeed.YourFeed)))], [text("Your Feed")])
-                            ]),
-                            li([@class(["nav-item"])], [
-                                a([@class(["nav-link", model.SelectedFeed == SelectedFeed.GlobalFeed ? "active" : ""]), attribute("style", ["cursor:hand"]), on.click(_ => dispatch(new SetFeed(SelectedFeed.GlobalFeed)))], [text("Global Feed")])
-                            ]),
-                            !string.IsNullOrEmpty(model.SelectedPopularTag) ? li([@class(["nav-item"])], [
-                                a([@class(["nav-link", model.SelectedFeed == SelectedFeed.SelectedPopularTag ? "active" : ""]), attribute("style", ["cursor:hand"]), on.click(_ => dispatch(new SetFeed(SelectedFeed.SelectedPopularTag)))], [text($"#{model.SelectedPopularTag}")])
-                            ]) : empty()
-                        ])
-                    ]),
-                    .. model.Feed is not null 
-                                ? model.Feed.Articles.Select(article =>
-                                    div([@class(["article-preview"])], [
-                                        div([@class(["article-meta"])], [
-                                            a([href([$"/profile/{article.Author.Username}"])], [
-                                                img([src([article.Author.Image])], [])]),
-                                            div([@class(["info"])], [
-                                                a([@class(["author"]), href([$"/profile/{article.Author.Username}"])], [
-                                                    text(article.Author.Username)]),],
-                                                span([@class(["date"])], [text("January 20th")])),
-                                            button([@class(["btn", "btn-outline-primary", "btn-sm", "pull-xs-right"]), on.click(_ => dispatch(new MarkArticleAsFavorite(article)))], [
-                                                i([@class(["ion-heart"])], []),
-                                                text($" {article.FavoritesCount}")
-                                        ]),
-                                        a([href([$"/article/{article.Slug}"]), @class(["preview-link"])], [
-                                            h1([], [text(article.Title)]),
-                                            p([], [text(article.Description)]),
-                                            span([], [text("Read more...")]),
-                                            ul([@class(["tag-list"])], article.TagList.Select(tag =>
-                                                li([@class(["tag-pill", "tag-default"])], [text(tag)])).ToArray()),
-                                                
-                                        ])
-                                    ])])).ToArray()
-                                : [],
-                            ul([@class(["pagination"])], Enumerable.Range(1, model.TotalPages).Select(page =>
-                                li([@class(["page-item", page == model.Page ? "active" : ""])], [
-                                    button([@class(["page-link"]), on.click((_) => dispatch(new ChangeHomeFeedPage(page)))], [text(page.ToString())])
-                                ])
-                            ).ToArray())
-                    ,
-                    div([@class(["col-md-3"])], [
-                        div([@class(["sidebar"])], [
-                            p([], [text("Popular Tags")]),
-                            div([@class(["tag-list"])], [
-                                .. model.Tags is not null 
-                                ? model.Tags.Select(tag => a([@class(["tag-pill", "tag-default"]), attribute("style", ["cursor:hand"]), on.click(_ => dispatch(new SelectPopularTag(tag)))], [text(tag)])).ToArray()
-                                : []
+                div([@class(["feed-toggle"])], [
+                    ul([@class(["nav", "nav-pills", "outline-active"])], [
+                        model.User is not null 
+                        ? li([@class(["nav-item"])], [
+                            a([@class(["nav-link", model.SelectedFeed == SelectedFeed.YourFeed ? "active" : ""]), attribute("style", ["cursor:hand"]), on.click(_ => dispatch(new SetFeed(SelectedFeed.YourFeed)))], [text("Your Feed")])
                             ])
+                        : empty(),
+                        li([@class(["nav-item"])], [
+                            a([@class(["nav-link", model.SelectedFeed == SelectedFeed.GlobalFeed ? "active" : ""]), attribute("style", ["cursor:hand"]), on.click(_ => dispatch(new SetFeed(SelectedFeed.GlobalFeed)))], [text("Global Feed")])
+                        ]),
+                        !string.IsNullOrEmpty(model.SelectedPopularTag) ? li([@class(["nav-item"])], [
+                            a([@class(["nav-link", model.SelectedFeed == SelectedFeed.SelectedPopularTag ? "active" : ""]), attribute("style", ["cursor:hand"]), on.click(_ => dispatch(new SetFeed(SelectedFeed.SelectedPopularTag)))], [text($"#{model.SelectedPopularTag}")])
+                        ]) : empty()
+                    ])
+                ]),
+                .. model.Feed is not null
+                            ? model.Feed.Articles.Select(article =>
+                                div([@class(["article-preview"])], [
+                                    div([@class(["article-meta"])], [
+                                        a([href([$"/profile/{article.Author.Username}"])], [
+                                            img([src([article.Author.Image])], [])]),
+                                        div([@class(["info"])], [
+                                            a([@class(["author"]), href([$"/profile/{article.Author.Username}"])], [
+                                                text(article.Author.Username)]),],
+                                            span([@class(["date"])], [text("January 20th")])),
+                                        button([@class(["btn", "btn-outline-primary", "btn-sm", "pull-xs-right"]), on.click(_ => dispatch(new MarkArticleAsFavorite(article)))], [
+                                            i([@class(["ion-heart"])], []),
+                                            text($" {article.FavoritesCount}")
+                                    ]),
+                                    a([href([$"/article/{article.Slug}"]), @class(["preview-link"])], [
+                                        h1([], [text(article.Title)]),
+                                        p([], [text(article.Description)]),
+                                        span([], [text("Read more...")]),
+                                        ul([@class(["tag-list"])], article.TagList.Select(tag =>
+                                            li([@class(["tag-pill", "tag-default"])], [text(tag)])).ToArray()),
+
+                                    ])
+                                ])])).ToArray()
+                            : [div([@class(["spinner-border"]), role(["status"])], [
+                                span([@class(["sr-only"])], [text("Loading...")])
+                            ])],
+                ul([@class(["pagination"])], Enumerable.Range(1, model.TotalPages).Select(page =>
+                    li([@class(["page-item", page == model.Page ? "active" : ""])], [
+                        button([@class(["page-link"]), on.click((_) => dispatch(new ChangeHomeFeedPage(page)))], [text(page.ToString())])
+                    ])
+                ).ToArray())
+                ,
+                div([@class(["col-md-3"])], [
+                    div([@class(["sidebar"])], [
+                        p([], [text("Popular Tags")]),
+                        div([@class(["tag-list"])], [
+                            .. model.Tags is not null
+                            ? model.Tags.Select(tag => a([@class(["tag-pill", "tag-default"]), attribute("style", ["cursor:hand"]), on.click(_ => dispatch(new SelectPopularTag(tag)))], [text(tag)])).ToArray()
+                            : []
                         ])
                     ])
                 ])
+            ])
             ])
         ])
     ];

@@ -40,3 +40,4 @@ public class Settings : Blazique.Web.Component
         ];
          
 }
+

@@ -1,4 +1,4 @@
-namespace Conduit.Components;
+namespace Conduit;
 
 public static class LocalStorageKey
 {
