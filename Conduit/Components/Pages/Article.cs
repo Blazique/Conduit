@@ -33,6 +33,9 @@ namespace Conduit.Components
         public DeleteComment DeleteComment {get;set;} = (_, _, _) => Task.FromResult(Error<Unit, string[]>(["Comment not deleted"]));
 
         [Inject]
+        public Domain.MarkArticleAsFavorite MarkArticleAsFavorite { get; set; } = (_, _) => Task.CompletedTask;
+
+        [Inject]
         public NavigationManager? Navigation { get; set; }
 
         protected override async Task<ArticlePageModel> Initialize(ArticlePageModel model)
@@ -72,8 +75,8 @@ namespace Conduit.Components
                     Navigation.NavigateTo($"/");
                     break;
                 case FavoriteCommand _:
-                    Navigation.NavigateTo($"/");
-                    break;
+                    await MarkArticleAsFavorite(model.Article.Slug, model.User!.Token);
+                    return model with {Article = model.Article with {Favorited = !model.Article.Favorited, FavoritesCount = model.Article.FavoritesCount + (model.Article.Favorited ? -1 : 1)}};
                 case FollowCommand _:
                     Navigation.NavigateTo($"/");
                     break;
@@ -256,7 +259,7 @@ namespace Conduit.Components
 
     public record ArticlePageModel
     {
-        public Domain.Article Article { get; init; } = new Domain.Article("", "", "", "", new List<string>(), DateTimeOffset.Now, DateTimeOffset.Now, false, 0, new Domain.Profile("", "", "", false));
+        public Domain.Article Article { get; init; } = new Domain.Article("", "", "", "", [], DateTimeOffset.Now, DateTimeOffset.Now, false, 0, new Domain.Profile("", "", "", false));
         public User? User { get; init; } = null;
         public List<Comment> Comments { get; internal set; } = [];
         public string[] Errors { get; internal set; } = [];
