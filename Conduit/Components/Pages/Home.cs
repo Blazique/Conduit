@@ -22,7 +22,10 @@ public class Home : Component<HomePageModel, HomePageCommand>
     public GetArticlesFeed GetArticlesFeed { get; set; } = (_, _, _) => Task.FromResult(new ArticleFeed(0, []));
 
     [Inject]
-    public Domain.MarkArticleAsFavorite MarkArticleAsFavorite { get; set; } = (_, _) => Task.CompletedTask;
+    public MarkArticleAsFavorite MarkArticleAsFavorite { get; set; } = (_, _) => Task.CompletedTask;
+
+    [Inject]
+    public UnmarkArticleAsFavorite UnmarkArticleAsFavorite { get; set; } = (_, _) => Task.CompletedTask;
 
     [Inject]
     public GetTags GetTags { get; set; } = () => Task.FromResult(Array.Empty<string>());
@@ -70,8 +73,17 @@ public class Home : Component<HomePageModel, HomePageCommand>
                 model.Feed = await GetAllRecentArticlesFeed(model.PageSize, (model.Page - 1) * model.PageSize, model.SelectedPopularTag);
                 model.TotalPages = model.Feed is not null ? (model.Feed.ArticlesCount + model.PageSize - 1) / model.PageSize : 0;
                 break;
-            case MarkArticleAsFavorite markArticleAsFavorite:
-                await MarkArticleAsFavorite(markArticleAsFavorite.Article.Slug, model.User.Token);
+            case InvertMarkArticleAsFavorite invertMarkArticleAsFavorite:
+            Console.WriteLine(invertMarkArticleAsFavorite.Article.Favorited);
+                if(invertMarkArticleAsFavorite.Article.Favorited)
+                {
+                    await UnmarkArticleAsFavorite(invertMarkArticleAsFavorite.Article.Slug, model.User!.Token);
+                }
+                else
+                {
+                    await MarkArticleAsFavorite(invertMarkArticleAsFavorite.Article.Slug, model.User!.Token);
+                }
+                    
                 await RefreshFeed(model);
                 break;
         }
@@ -131,7 +143,7 @@ public class Home : Component<HomePageModel, HomePageCommand>
                                             a([@class(["author"]), href([$"/profile/{article.Author.Username}"])], [
                                                 text(article.Author.Username)]),],
                                             span([@class(["date"])], [text("January 20th")])),
-                                        button([@class(["btn", "btn-outline-primary", "btn-sm", "pull-xs-right"]), on.click(_ => dispatch(new MarkArticleAsFavorite(article)))], [
+                                        button([@class(["btn", "btn-outline-primary", "btn-sm", "pull-xs-right"]), on.click(_ => dispatch(new InvertMarkArticleAsFavorite(article)))], [
                                             i([@class(["ion-heart"])], []),
                                             text($" {article.FavoritesCount}")
                                     ]),
@@ -169,7 +181,7 @@ public class Home : Component<HomePageModel, HomePageCommand>
     ];
 }
 
-internal record MarkArticleAsFavorite(Domain.Article Article) : HomePageCommand;
+internal record InvertMarkArticleAsFavorite(Domain.Article Article) : HomePageCommand;
 
 internal record SelectPopularTag(string Tag) : HomePageCommand;
 

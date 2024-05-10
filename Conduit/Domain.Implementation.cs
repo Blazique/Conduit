@@ -95,6 +95,12 @@ public static class Implementation
         await client.CreateArticleFavoriteAsync(slug);
     };
 
+    public static Func<RealWorldClient, UnmarkArticleAsFavorite> unmarkArticleAsFavorite = (RealWorldClient client) => async (string slug, string token) =>
+    {
+        client.SetAuthorizationHeader("Bearer", token);
+        await client.DeleteArticleFavoriteAsync(slug);
+    };
+
     public static Func<RealWorldClient, GetArticle> getArticle = (RealWorldClient client) => async (Slug slug) =>
     {
         try

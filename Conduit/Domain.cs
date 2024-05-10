@@ -33,13 +33,13 @@ public static class DtoExtensions
         new(comment.Id, comment.Body, comment.CreatedAt, comment.UpdatedAt, comment.Author.ToProfile());
 }
 
-public delegate Task<Radix.Data.Result<User, string>>? Login(string? email, string? password);
+public delegate Task<Result<User, string>>? Login(string? email, string? password);
 
-public delegate Task<Radix.Data.Result<User, string[]>>? CreateUser(string? username, string? email, string? password);
+public delegate Task<Result<User, string[]>>? CreateUser(string? username, string? email, string? password);
 
-public delegate Task<Radix.Data.Option<User>> GetUser();
+public delegate Task<Option<User>> GetUser();
 
-public delegate Task<Radix.Data.Option<Profile>> GetProfile(string username);
+public delegate Task<Option<Profile>> GetProfile(string username);
 
 public delegate Task<ArticleFeed> GetArticlesFeed(string token, int? limit, int? offset);
 
@@ -49,11 +49,13 @@ public delegate Task<string[]> GetTags();
 
 public delegate Task MarkArticleAsFavorite(string slug, string token);
 
-public delegate Task<Radix.Data.Result<Article, string[]>> GetArticle(Slug slug);
+public delegate Task UnmarkArticleAsFavorite(string slug, string token);
+
+public delegate Task<Result<Article, string[]>> GetArticle(Slug slug);
 
 public delegate Task<List<Comment>> GetComments(Slug slug);
 
-public delegate Task<Radix.Data.Result<Comment, string[]>> AddComment(Slug slug, string body, string token);
+public delegate Task<Result<Comment, string[]>> AddComment(Slug slug, string body, string token);
 
-public delegate Task<Radix.Data.Result<Unit, string[]>> DeleteComment(Slug slug, int commentId, string token);
+public delegate Task<Result<Unit, string[]>> DeleteComment(Slug slug, int commentId, string token);
 

@@ -21,6 +21,7 @@ builder.Services.AddSingleton((_) => getProfile(realWorldClient));
 builder.Services.AddSingleton((_) => getArticlesFeed(realWorldClient));
 builder.Services.AddSingleton((_) => getAllRecentArticles(realWorldClient));
 builder.Services.AddSingleton((_) => markArticleAsFavorite(realWorldClient));
+builder.Services.AddSingleton((_) => unmarkArticleAsFavorite(realWorldClient));
 builder.Services.AddSingleton((_) => getTags(realWorldClient));
 builder.Services.AddSingleton((_) => getArticle(realWorldClient));
 builder.Services.AddSingleton((_) => getComments(realWorldClient));

@@ -36,6 +36,9 @@ namespace Conduit.Components
         public Domain.MarkArticleAsFavorite MarkArticleAsFavorite { get; set; } = (_, _) => Task.CompletedTask;
 
         [Inject]
+        public Domain.UnmarkArticleAsFavorite UnmarkArticleAsFavorite { get; set; } = (_, _) => Task.CompletedTask;
+
+        [Inject]
         public NavigationManager? Navigation { get; set; }
 
         protected override async Task<ArticlePageModel> Initialize(ArticlePageModel model)
@@ -74,8 +77,16 @@ namespace Conduit.Components
                 case DeleteArticleCommand _:
                     Navigation.NavigateTo($"/");
                     break;
-                case FavoriteCommand _:
-                    await MarkArticleAsFavorite(model.Article.Slug, model.User!.Token);
+                case InvertMarkArticleAsFavoriteCommand _:
+                    if(model.Article.Favorited)
+                    {
+                        await UnmarkArticleAsFavorite(model.Article.Slug, model.User!.Token);
+                    }
+                    else
+                    {
+                        await MarkArticleAsFavorite(model.Article.Slug, model.User!.Token);
+                    }
+                    
                     return model with {Article = model.Article with {Favorited = !model.Article.Favorited, FavoritesCount = model.Article.FavoritesCount + (model.Article.Favorited ? -1 : 1)}};
                 case FollowCommand _:
                     Navigation.NavigateTo($"/");
@@ -224,7 +235,7 @@ namespace Conduit.Components
                 ]),
                 text(" "),
                 text(" "),
-                button([@class(["btn", "btn-sm", "btn-outline-primary"]), type(["button"]), on.click(_ => dispatch(new FavoriteCommand()))], [
+                button([@class(["btn", "btn-sm", "btn-outline-primary"]), type(["button"]), on.click(_ => dispatch(new InvertMarkArticleAsFavoriteCommand()))], [
                     i([@class(["ion-heart"])], []),
                     span([@class(["counter"])], [text($" Favorite Article ({model.Article.FavoritesCount})")]),
                 ])
@@ -254,7 +265,7 @@ namespace Conduit.Components
     internal record SetNewComment(string Comment) : ArticlePageCommand;
     internal record EditArticleCommand : ArticlePageCommand;
     internal record DeleteArticleCommand : ArticlePageCommand;
-    internal record FavoriteCommand : ArticlePageCommand;
+    internal record InvertMarkArticleAsFavoriteCommand : ArticlePageCommand;
     internal record FollowCommand : ArticlePageCommand;
 
     public record ArticlePageModel
