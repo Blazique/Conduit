@@ -59,3 +59,7 @@ public delegate Task<Result<Comment, string[]>> AddComment(Slug slug, string bod
 
 public delegate Task<Result<Unit, string[]>> DeleteComment(Slug slug, int commentId, string token);
 
+public delegate Task<Result<Unit, string[]>> FollowUser(string username, string token);
+
+public delegate Task<Result<Unit, string[]>> UnfollowUser(string username, string token);
+

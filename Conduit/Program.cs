@@ -27,6 +27,8 @@ builder.Services.AddSingleton((_) => getArticle(realWorldClient));
 builder.Services.AddSingleton((_) => getComments(realWorldClient));
 builder.Services.AddSingleton((_) => addComment(realWorldClient));
 builder.Services.AddSingleton((_) => deleteComment(realWorldClient));
+builder.Services.AddSingleton((_) => followUser(realWorldClient));
+builder.Services.AddSingleton((_) => unfollowUser(realWorldClient));
 builder.Services.AddSingleton<MessageBus>();
 
 

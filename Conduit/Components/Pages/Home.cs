@@ -74,7 +74,6 @@ public class Home : Component<HomePageModel, HomePageCommand>
                 model.TotalPages = model.Feed is not null ? (model.Feed.ArticlesCount + model.PageSize - 1) / model.PageSize : 0;
                 break;
             case InvertMarkArticleAsFavorite invertMarkArticleAsFavorite:
-            Console.WriteLine(invertMarkArticleAsFavorite.Article.Favorited);
                 if(invertMarkArticleAsFavorite.Article.Favorited)
                 {
                     await UnmarkArticleAsFavorite(invertMarkArticleAsFavorite.Article.Slug, model.User!.Token);

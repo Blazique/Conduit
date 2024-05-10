@@ -33,10 +33,16 @@ namespace Conduit.Components
         public DeleteComment DeleteComment {get;set;} = (_, _, _) => Task.FromResult(Error<Unit, string[]>(["Comment not deleted"]));
 
         [Inject]
-        public Domain.MarkArticleAsFavorite MarkArticleAsFavorite { get; set; } = (_, _) => Task.CompletedTask;
+        public MarkArticleAsFavorite MarkArticleAsFavorite { get; set; } = (_, _) => Task.CompletedTask;
 
         [Inject]
-        public Domain.UnmarkArticleAsFavorite UnmarkArticleAsFavorite { get; set; } = (_, _) => Task.CompletedTask;
+        public UnmarkArticleAsFavorite UnmarkArticleAsFavorite { get; set; } = (_, _) => Task.CompletedTask;
+
+        [Inject]
+        public FollowUser FollowUser { get; set; } = (_, _) => Task.FromResult(Error<Unit, string[]>(["User not followed"]));
+
+        [Inject]
+        public UnfollowUser UnfollowUser { get; set; } = (_, _) => Task.FromResult(Error<Unit, string[]>(["User not unfollowed"]));
 
         [Inject]
         public NavigationManager? Navigation { get; set; }
@@ -89,8 +95,15 @@ namespace Conduit.Components
                     
                     return model with {Article = model.Article with {Favorited = !model.Article.Favorited, FavoritesCount = model.Article.FavoritesCount + (model.Article.Favorited ? -1 : 1)}};
                 case FollowCommand _:
-                    Navigation.NavigateTo($"/");
-                    break;
+                    if(model.Article.Author.Following)
+                    {
+                        await UnfollowUser(model.Article.Author.Username, model.User!.Token);
+                    }
+                    else
+                    {
+                        await FollowUser(model.Article.Author.Username, model.User!.Token);
+                    }
+                    return model with {Article = model.Article with {Author = model.Article.Author with {Following = !model.Article.Author.Following}}};
                 case PostCommentCommand (var comment):
                     var addCommentResult = await AddComment((Slug)model.Article.Slug, comment, model.User!.Token);
                     switch (addCommentResult)

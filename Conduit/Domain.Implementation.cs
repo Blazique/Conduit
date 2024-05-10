@@ -187,4 +187,58 @@ public static class Implementation
             return Error<Unit, string[]>([e.Message]);
         }
     };
+
+    public static Func<RealWorldClient, FollowUser> followUser = (RealWorldClient client) => async (string username, string token) =>
+    {
+        client.SetAuthorizationHeader("Bearer", token);
+        
+        try
+        {
+            await client.FollowUserByUsernameAsync(username);
+            return Ok<Unit, string[]>(new ());
+        }
+        catch (ApiException<GenericErrorModel> e)
+        {
+            return Error<Unit, string[]>(e.Result.Errors.Select(error => $"{error.Key}: ").ToArray());
+        }
+        catch (ApiException e)
+        {
+            return e.StatusCode switch
+            {
+                401 => Error<Unit, string[]>(["Not authorized to follow a user"]),
+                _ => Error<Unit, string[]>([e.Message]),
+            };
+        }
+        catch(Exception e)
+        {
+            return Error<Unit, string[]>([e.Message]);
+        }
+    };
+
+    public static Func<RealWorldClient, UnfollowUser> unfollowUser = (RealWorldClient client) => async (string username, string token) =>
+    {
+        client.SetAuthorizationHeader("Bearer", token);
+        
+        try
+        {
+            await client.UnfollowUserByUsernameAsync(username);
+            return Ok<Unit, string[]>(new ());
+        }
+        catch (ApiException<GenericErrorModel> e)
+        {
+            return Error<Unit, string[]>(e.Result.Errors.Select(error => $"{error.Key}: ").ToArray());
+        }
+        catch (ApiException e)
+        {
+            return e.StatusCode switch
+            {
+                401 => Error<Unit, string[]>(["Not authorized to unfollow a user"]),
+                _ => Error<Unit, string[]>([e.Message]),
+            };
+        }
+        catch(Exception e)
+        {
+            return Error<Unit, string[]>([e.Message]);
+        }
+    };
 }
