@@ -7,6 +7,8 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Conduit", "Conduit\Conduit.
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Conduit.API", "Conduit.API\Conduit.API.csproj", "{3BD06CC8-260E-4BDF-A497-6611FEE26E0D}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Conduit.IdentityServer", "Conduit.IdentityServer\Conduit.IdentityServer.csproj", "{F579C453-5804-4DE2-BEB4-F4AC7756249A}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -21,6 +23,10 @@ Global
 		{3BD06CC8-260E-4BDF-A497-6611FEE26E0D}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{3BD06CC8-260E-4BDF-A497-6611FEE26E0D}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{3BD06CC8-260E-4BDF-A497-6611FEE26E0D}.Release|Any CPU.Build.0 = Release|Any CPU
+		{F579C453-5804-4DE2-BEB4-F4AC7756249A}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{F579C453-5804-4DE2-BEB4-F4AC7756249A}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{F579C453-5804-4DE2-BEB4-F4AC7756249A}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{F579C453-5804-4DE2-BEB4-F4AC7756249A}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

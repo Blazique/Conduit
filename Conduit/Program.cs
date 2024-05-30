@@ -12,7 +12,34 @@ var builder = WebApplication.CreateBuilder(args);
 builder.Services
     .AddRazorComponents()
     .AddInteractiveServerComponents()
-    .AddInteractiveWebAssemblyComponents();
+    .AddInteractiveWebAssemblyComponents()
+    .AddAuthentication(options =>
+    {
+        options.DefaultScheme = "Cookies";
+        options.DefaultChallengeScheme = "oidc";
+    })
+    .AddCookie("Cookies")
+    .AddOpenIdConnect("oidc", options =>
+    {
+        options.Authority = "https://localhost:5001";
+
+        options.ClientId = "web";
+        options.ClientSecret = "secret";
+        options.ResponseType = "code";
+
+        options.Scope.Clear();
+        options.Scope.Add("openid");
+        options.Scope.Add("profile");
+        options.Scope.Add("api1");
+        options.Scope.Add("offline_access");
+        options.Scope.Add("verification");
+        options.ClaimActions.MapJsonKey("email_verified", "email_verified");
+        options.GetClaimsFromUserInfoEndpoint = true;
+
+        options.MapInboundClaims = false; // Don't rename claim types
+
+        options.SaveTokens = true;
+    });
 
 builder.Services.AddScoped(provider => loginUser(realWorldClient, provider.GetService<ProtectedSessionStorage>()!));
 builder.Services.AddSingleton((_) => createUser(realWorldClient));
