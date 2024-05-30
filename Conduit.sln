@@ -3,11 +3,22 @@ Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio Version 17
 VisualStudioVersion = 17.5.002.0
 MinimumVisualStudioVersion = 10.0.40219.1
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Conduit", "Conduit\Conduit.csproj", "{E3E0B5E2-159E-4C3B-BB2F-622F128C42D2}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Conduit.Frontend", "Conduit.Frontend\Conduit.Frontend.csproj", "{E3E0B5E2-159E-4C3B-BB2F-622F128C42D2}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Conduit.API", "Conduit.API\Conduit.API.csproj", "{3BD06CC8-260E-4BDF-A497-6611FEE26E0D}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Conduit.API", "Conduit.API\Conduit.API.csproj", "{3BD06CC8-260E-4BDF-A497-6611FEE26E0D}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Conduit.IdentityServer", "Conduit.IdentityServer\Conduit.IdentityServer.csproj", "{F579C453-5804-4DE2-BEB4-F4AC7756249A}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Conduit.IdentityServer", "Conduit.IdentityServer\Conduit.IdentityServer.csproj", "{F579C453-5804-4DE2-BEB4-F4AC7756249A}"
+EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Conduit.AppHost", "Conduit.AppHost\Conduit.AppHost.csproj", "{9F5BF8AC-65EE-45BB-BDF6-7790894A10B7}"
+EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Conduit.ServiceDefaults", "Conduit.ServiceDefaults\Conduit.ServiceDefaults.csproj", "{72F31F33-8F47-419F-A9B5-1DE68D25A8B7}"
+EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Conduit", "Conduit\Conduit.csproj", "{84B6C13D-1C86-43A3-BF68-171A4C717808}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Solution Items", "Solution Items", "{C249E71B-8D0A-41A4-9465-DB6824844D95}"
+	ProjectSection(SolutionItems) = preProject
+		global.json = global.json
+	EndProjectSection
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -27,6 +38,18 @@ Global
 		{F579C453-5804-4DE2-BEB4-F4AC7756249A}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{F579C453-5804-4DE2-BEB4-F4AC7756249A}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{F579C453-5804-4DE2-BEB4-F4AC7756249A}.Release|Any CPU.Build.0 = Release|Any CPU
+		{9F5BF8AC-65EE-45BB-BDF6-7790894A10B7}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{9F5BF8AC-65EE-45BB-BDF6-7790894A10B7}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{9F5BF8AC-65EE-45BB-BDF6-7790894A10B7}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{9F5BF8AC-65EE-45BB-BDF6-7790894A10B7}.Release|Any CPU.Build.0 = Release|Any CPU
+		{72F31F33-8F47-419F-A9B5-1DE68D25A8B7}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{72F31F33-8F47-419F-A9B5-1DE68D25A8B7}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{72F31F33-8F47-419F-A9B5-1DE68D25A8B7}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{72F31F33-8F47-419F-A9B5-1DE68D25A8B7}.Release|Any CPU.Build.0 = Release|Any CPU
+		{84B6C13D-1C86-43A3-BF68-171A4C717808}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{84B6C13D-1C86-43A3-BF68-171A4C717808}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{84B6C13D-1C86-43A3-BF68-171A4C717808}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{84B6C13D-1C86-43A3-BF68-171A4C717808}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

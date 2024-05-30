@@ -3,16 +3,19 @@ using Conduit.Components;
 using static Conduit.Domain.Implementation;
 using Microsoft.AspNetCore.Components.Server.ProtectedBrowserStorage;
 using Conduit;
+using Microsoft.AspNetCore.Authentication;
 
 var realWorldClient = new RealWorldClient("https://api.realworld.io/api/", new HttpClient());
 
 var builder = WebApplication.CreateBuilder(args);
 
-// Add services to the container.
-builder.Services
-    .AddRazorComponents()
+builder.AddServiceDefaults();
+
+builder.Services.AddRazorComponents()
     .AddInteractiveServerComponents()
-    .AddInteractiveWebAssemblyComponents()
+    .AddInteractiveWebAssemblyComponents();
+
+builder.Services
     .AddAuthentication(options =>
     {
         options.DefaultScheme = "Cookies";
@@ -40,6 +43,7 @@ builder.Services
 
         options.SaveTokens = true;
     });
+    
 
 builder.Services.AddScoped(provider => loginUser(realWorldClient, provider.GetService<ProtectedSessionStorage>()!));
 builder.Services.AddSingleton((_) => createUser(realWorldClient));

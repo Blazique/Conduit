@@ -11,4 +11,9 @@
     <PackageReference Include="Duende.IdentityServer" Version="7.0.4" />
   </ItemGroup>
 
+  <ItemGroup>
+    <ProjectReference Include="..\Conduit.ServiceDefaults\Conduit.ServiceDefaults.csproj" />
+    <ProjectReference Include="..\Conduit\Conduit.csproj" />
+  </ItemGroup>
+
 </Project>

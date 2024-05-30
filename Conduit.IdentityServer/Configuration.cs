@@ -1,4 +1,5 @@
 ﻿
+using Duende.IdentityServer;
 using Duende.IdentityServer.Models;
 
 namespace Conduit.IdentityServer;
@@ -33,10 +34,10 @@ public static class Configuration
             },
 
             // where to redirect to after login
-            RedirectUris = { "https://localhost:7199/signin-oidc" },
+            RedirectUris = { BuildRedirectUri<Services.Frontend>("signin-oidc") },
 
             // where to redirect to after logout
-            PostLogoutRedirectUris = { "https://localhost:7199/signout-callback-oidc" },
+            PostLogoutRedirectUris = { BuildRedirectUri<Services.Frontend>("signout-callback-oidc") },
 
             // scopes that client has access to
             AllowedScopes = 
@@ -47,6 +48,8 @@ public static class Configuration
             }
         }
     ];
+
+    public static string BuildRedirectUri<T>(string endpoint) where T : Service<T> => $"{T.Endpoint}:7199/{endpoint}";
 
     public static IEnumerable<IdentityResource> IdentityResources =>
     [

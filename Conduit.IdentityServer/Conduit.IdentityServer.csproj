@@ -11,4 +11,9 @@
 
 		<PackageReference Include="Serilog.AspNetCore" Version="8.0.0" />
 	</ItemGroup>
+
+	<ItemGroup>
+	  <ProjectReference Include="..\Conduit.ServiceDefaults\Conduit.ServiceDefaults.csproj" />
+	  <ProjectReference Include="..\Conduit\Conduit.csproj" />
+	</ItemGroup>
 </Project>
