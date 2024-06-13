@@ -1,6 +1,9 @@
+using Microsoft.AspNetCore.Authorization;
+
 namespace Conduit.Components;
 
 [Route("/Editor")]
+[Authorize]
 public class Editor : Blazique.Web.Component
 {
     public override Node[] Render()

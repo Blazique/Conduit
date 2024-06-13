@@ -3,12 +3,12 @@ using Microsoft.AspNetCore.Diagnostics.HealthChecks;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Diagnostics.HealthChecks;
 using Microsoft.Extensions.Logging;
-using Microsoft.Extensions.ServiceDiscovery;
 using OpenTelemetry.Logs;
 using OpenTelemetry.Metrics;
 using OpenTelemetry.Trace;
 
 namespace Microsoft.Extensions.Hosting;
+using Microsoft.Extensions.ServiceDiscovery;
 
 public static class Extensions
 {
@@ -25,7 +25,7 @@ public static class Extensions
             // Turn on resilience by default
             http.AddStandardResilienceHandler();
 
-            // Turn on service discovery by default
+            //// Turn on service discovery by default
             http.AddServiceDiscovery();
         });
 

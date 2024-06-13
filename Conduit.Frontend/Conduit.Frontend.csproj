@@ -5,6 +5,8 @@
     <Nullable>enable</Nullable>
     <ImplicitUsings>enable</ImplicitUsings>
     <LangVersion>preview</LangVersion>
+    <UserSecretsId>96ee2fcf-c16b-4c0e-bb89-19a50c2a6418</UserSecretsId>
+    <DockerDefaultTargetOS>Linux</DockerDefaultTargetOS>
   </PropertyGroup>
 
   <ItemGroup>
@@ -15,6 +17,7 @@
     <PackageReference Include="Microsoft.AspNetCore.Components" Version="8.0.6" />
     <PackageReference Include="Microsoft.AspNetCore.Components.Forms" Version="8.0.6" />
     <PackageReference Include="Microsoft.AspNetCore.Components.WebAssembly.Server" Version="8.0.6" />
+    <PackageReference Include="Microsoft.VisualStudio.Azure.Containers.Tools.Targets" Version="1.21.0-Preview.1" />
     <PackageReference Include="Newtonsoft.Json" Version="13.0.3" />
     <PackageReference Include="Radix.Generators" Version="4.5.0" />
     <PackageReference Include="System.Reactive" Version="6.0.0" />
@@ -25,9 +28,4 @@
     <ProjectReference Include="..\Conduit.ServiceDefaults\Conduit.ServiceDefaults.csproj" />
     <ProjectReference Include="..\Conduit\Conduit.csproj" />
   </ItemGroup>
-
-  <ItemGroup>
-    <Folder Include="Modules\" />
-  </ItemGroup>
-
 </Project>

@@ -1,3 +1,5 @@
+using Microsoft.AspNetCore.Components.Authorization;
+
 namespace Conduit.Components;
 
 
@@ -17,8 +19,10 @@ public class App : Blazique.Web.Component
                     link([rel(["stylesheet"]), href(["//demo.productionready.io/main.css"])], []),
                 ]),
                 body([], [
-                    component<Routes>([], []),
-                    script([src(["_framework/blazor.web.js"])], []),
+                    component<CascadingAuthenticationState>([], [
+                        component<Routes>([], []),
+                        script([src(["_framework/blazor.web.js"])], [])
+                    ]),
                 ])
             ])
         ];   

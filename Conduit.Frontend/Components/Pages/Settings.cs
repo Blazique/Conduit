@@ -1,6 +1,9 @@
+using Microsoft.AspNetCore.Authorization;
+
 namespace Conduit.Components;
 
 [Route("/Settings")]
+[Authorize]
 public class Settings : Blazique.Web.Component
 {
     public override Node[] Render()

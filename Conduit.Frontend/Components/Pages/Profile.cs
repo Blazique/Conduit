@@ -1,6 +1,7 @@
 
 using Conduit.ApiClient;
 using Conduit.Domain;
+using Microsoft.AspNetCore.Authorization;
 using Radix.Data;
 using static Radix.Control.Option.Extensions;
 

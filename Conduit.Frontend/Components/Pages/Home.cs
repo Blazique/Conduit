@@ -2,6 +2,7 @@
 using System.Runtime.CompilerServices;
 using Blazique.Web.Html.Names.Elements;
 using Conduit.Domain;
+using Microsoft.AspNetCore.Authorization;
 using Radix.Data;
 using static Radix.Control.Option.Extensions;
 
@@ -9,6 +10,7 @@ namespace Conduit.Components;
 
 [Route("/")]
 [InteractiveServerRenderMode(Prerender = false)]
+[Authorize]
 public class Home : Component<HomePageModel, HomePageCommand>
 {
 

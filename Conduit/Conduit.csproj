@@ -6,4 +6,16 @@
     <Nullable>enable</Nullable>
   </PropertyGroup>
 
+  <ItemGroup>
+    <Compile Remove="Services\Publishing\**" />
+    <EmbeddedResource Remove="Services\Publishing\**" />
+    <None Remove="Services\Publishing\**" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Aspire.Hosting" Version="8.0.1" />
+    <PackageReference Include="Consul" Version="1.7.14.3" />
+    <PackageReference Include="Microsoft.Extensions.ServiceDiscovery" Version="8.0.1" />
+  </ItemGroup>
+
 </Project>

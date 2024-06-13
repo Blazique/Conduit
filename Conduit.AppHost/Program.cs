@@ -1,9 +1,13 @@
+using Conduit;
+
 var builder = DistributedApplication.CreateBuilder(args);
-var identityServer = builder.AddProject<Projects.Conduit_IdentityServer>(name: Conduit.Services.IdentityServer.Name);
-var api = builder.AddProject<Projects.Conduit_API>(Conduit.Services.API.Name)
-    .WithReference(identityServer);
-builder.AddProject<Projects.Conduit_Frontend>(Conduit.Services.Frontend.Name)
-    .WithReference(identityServer)
-    .WithReference(api);
+var identityServer = builder
+    .AddProject<Projects.Conduit_IdentityServer>(name: IdentityServer.Name);
+var identityEndpoint = identityServer.GetEndpoint("https");
+var api = builder.AddProject<Projects.Conduit_API>(Backend.Name)
+    .WithEnvironment("Identity__Url", identityEndpoint);
+builder.AddProject<Projects.Conduit_Frontend>(Frontend.Name)
+    .WithReference(api)
+    .WithEnvironment("Identity__Url", identityEndpoint);
 
 builder.Build().Run();

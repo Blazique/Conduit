@@ -1,4 +1,5 @@
 using Conduit.Domain;
+using Microsoft.AspNetCore.Authorization;
 using Radix;
 using Radix.Data;
 using static Radix.Control.Result.Extensions;
@@ -6,6 +7,7 @@ using static Radix.Control.Result.Extensions;
 namespace Conduit.Components;
 
 [Route("/Login")]
+[AllowAnonymous]
 [InteractiveServerRenderMode(Prerender = true)]
 public class Login : Component<LoginPageModel, LoginPageCommand>
 

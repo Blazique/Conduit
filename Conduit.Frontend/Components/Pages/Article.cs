@@ -1,6 +1,7 @@
 
 using System.Diagnostics.Contracts;
 using Conduit.Domain;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Components.Rendering;
 using Radix.Data;
 using static Radix.Control.Option.Extensions;
@@ -136,7 +137,7 @@ namespace Conduit.Components
                 ? model.Errors.Select(error => div([@class(["alert", "alert-warning"])], [text(error)])).ToArray()
                 : [
                     div([@class(["article-page"])], [
-                div([@class(["banner"])], [
+                    div([@class(["banner"])], [
                     div([@class(["container"])], [
                         h1([], [text(model.Article.Title)]),
                         div([@class(["article-meta"])], ArticleMeta(model, dispatch))

@@ -1,28 +1,27 @@
 ﻿
 using Duende.IdentityServer;
 using Duende.IdentityServer.Models;
+using IdentityModel;
+using Microsoft.Extensions.Options;
+using Microsoft.Extensions.ServiceDiscovery;
+using Microsoft.Win32;
 
 namespace Conduit.IdentityServer;
-
-public record Scope(string Name, string DisplayName);
-
-public static class Scopes
-{
-    public static readonly Scope Full = new("conduit.full", "Conduit.API.Full");
-}
 
 public static class Configuration
 {
     public static IEnumerable<ApiScope> ApiScopes =>
     [
-        new ApiScope(name: Scopes.Full.Name, displayName: Scopes.Full.DisplayName) 
+        new ApiScope(name: Services.Access.Scopes.All.Name, displayName: Services.Access.Scopes.All.Description) 
     ];
+
 
     public static IEnumerable<Client> Clients =>
     [
+
         new Client
         {
-            ClientId = "conduit",
+            ClientId = Frontend.Name,
 
             // no interactive user, use the clientid/secret for authentication
             AllowedGrantTypes = GrantTypes.Code,
@@ -33,27 +32,39 @@ public static class Configuration
                 new Secret("secret".Sha256())
             },
 
-            // where to redirect to after login
-            RedirectUris = { BuildRedirectUri<Services.Frontend>("signin-oidc") },
+            // where to redirect to after login 
+           
+            RedirectUris = { $"https://localhost:7199/signin-oidc" },
 
             // where to redirect to after logout
-            PostLogoutRedirectUris = { BuildRedirectUri<Services.Frontend>("signout-callback-oidc") },
+            PostLogoutRedirectUris = { $"https://localhost:7199/signout-callback-oidc" },
 
             // scopes that client has access to
-            AllowedScopes = 
-            {
+            AllowedScopes =
+            [
                 IdentityServerConstants.StandardScopes.OpenId,
                 IdentityServerConstants.StandardScopes.Profile,
-                Scopes.Full.Name 
-            }
+                IdentityServerConstants.StandardScopes.OfflineAccess,
+                Services.Access.Scopes.All.Name,
+                "verification"
+            ],
+
+            AllowOfflineAccess = true
         }
     ];
-
-    public static string BuildRedirectUri<T>(string endpoint) where T : Service<T> => $"{T.Endpoint}:7199/{endpoint}";
 
     public static IEnumerable<IdentityResource> IdentityResources =>
     [
         new IdentityResources.OpenId(),
         new IdentityResources.Profile(),
+        new IdentityResource()
+        {
+            Name = "verification",
+            UserClaims = new List<string>
+            {
+                JwtClaimTypes.Email,
+                JwtClaimTypes.EmailVerified
+            }
+        }
     ];
 }

@@ -1,8 +1,12 @@
-﻿namespace Conduit;
+﻿using Conduit;
 
-public interface Service<T> where T : Service<T>
+namespace Conduit;
+
+public interface Service<TInterface, TComponent> 
+    where TInterface : Service<TInterface, TComponent> 
+    where TComponent : Component<TComponent>
 {
-    public static abstract string Name { get; } 
+    public static abstract string Name { get; }
 
-    static virtual string Endpoint => $"https://{T.Name}";
-}
+    public static abstract string Description { get; }
+}   

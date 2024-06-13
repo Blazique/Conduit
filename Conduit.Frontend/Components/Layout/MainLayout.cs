@@ -1,7 +1,9 @@
 using Conduit.Domain;
+using Microsoft.AspNetCore.Components.Authorization;
 using Microsoft.AspNetCore.Components.Routing;
 using Radix.Data;
 using static Radix.Control.Option.Extensions;
+using static Blazique.Attribute;
 
 namespace Conduit.Components.Layout;
 
@@ -13,6 +15,16 @@ public class MainLayout : Blazique.Web.Component
     public override Node[] Render()
      =>
      [
+        //component<AuthorizeView>([
+        //    fragment<AuthenticationState>("Authorized", authenticationState => [
+        //            component<NavBar>([], []),
+        //         Body is not null ? fragment(Body) : empty(),
+        //        ]),
+        //    fragment<AuthenticationState>("NotAuthorized", authenticationState => [
+                    
+        //         text("Unauthorized")
+        //        ])
+        //    ],[]),
         component<NavBar>([], []),
         Body is not null ? fragment(Body) : empty(),
         footer([@class(["footer"])], [

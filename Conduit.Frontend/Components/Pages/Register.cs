@@ -5,6 +5,7 @@ using Radix.Data;
 using Microsoft.AspNetCore.Components.Server.ProtectedBrowserStorage;
 using Conduit.Domain;
 using static Radix.Control.Result.Extensions;
+using Microsoft.AspNetCore.Authorization;
 
 namespace Conduit.Components;
 
