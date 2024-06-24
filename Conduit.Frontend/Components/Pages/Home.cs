@@ -21,13 +21,13 @@ public class Home : Component<HomePageModel, HomePageCommand>
     public GetAllRecentArticles GetAllRecentArticlesFeed { get; set; } = (_, _, _) => Task.FromResult(new ArticleFeed(0, []));
 
     [Inject]
-    public GetArticlesFeed GetArticlesFeed { get; set; } = (_, _, _) => Task.FromResult(new ArticleFeed(0, []));
+    public GetArticlesFeed GetArticlesFeed { get; set; } = (_, _) => Task.FromResult(new ArticleFeed(0, []));
 
     [Inject]
-    public MarkArticleAsFavorite MarkArticleAsFavorite { get; set; } = (_, _) => Task.CompletedTask;
+    public MarkArticleAsFavorite MarkArticleAsFavorite { get; set; } = (_) => Task.CompletedTask;
 
     [Inject]
-    public UnmarkArticleAsFavorite UnmarkArticleAsFavorite { get; set; } = (_, _) => Task.CompletedTask;
+    public UnmarkArticleAsFavorite UnmarkArticleAsFavorite { get; set; } = (_) => Task.CompletedTask;
 
     [Inject]
     public GetTags GetTags { get; set; } = () => Task.FromResult(Array.Empty<string>());
@@ -78,11 +78,11 @@ public class Home : Component<HomePageModel, HomePageCommand>
             case InvertMarkArticleAsFavorite invertMarkArticleAsFavorite:
                 if(invertMarkArticleAsFavorite.Article.Favorited)
                 {
-                    await UnmarkArticleAsFavorite(invertMarkArticleAsFavorite.Article.Slug, model.User!.Token);
+                    await UnmarkArticleAsFavorite(invertMarkArticleAsFavorite.Article.Slug);
                 }
                 else
                 {
-                    await MarkArticleAsFavorite(invertMarkArticleAsFavorite.Article.Slug, model.User!.Token);
+                    await MarkArticleAsFavorite(invertMarkArticleAsFavorite.Article.Slug);
                 }
                     
                 await RefreshFeed(model);
@@ -95,7 +95,7 @@ public class Home : Component<HomePageModel, HomePageCommand>
             switch (model.SelectedFeed)
             {
                 case SelectedFeed.YourFeed:
-                    model.Feed = await GetArticlesFeed(model.User.Token, model.PageSize, (model.Page - 1) * model.PageSize);
+                    model.Feed = await GetArticlesFeed(model.PageSize, (model.Page - 1) * model.PageSize);
                     break;
                 case SelectedFeed.GlobalFeed:
                     model.Feed = await GetAllRecentArticlesFeed(model.PageSize, (model.Page - 1) * model.PageSize);

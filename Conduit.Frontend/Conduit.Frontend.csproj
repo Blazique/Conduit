@@ -19,12 +19,13 @@
     <PackageReference Include="Microsoft.AspNetCore.Components.WebAssembly.Server" Version="8.0.6" />
     <PackageReference Include="Microsoft.VisualStudio.Azure.Containers.Tools.Targets" Version="1.21.0-Preview.1" />
     <PackageReference Include="Newtonsoft.Json" Version="13.0.3" />
-    <PackageReference Include="Radix.Generators" Version="4.5.0" />
+    <PackageReference Include="Radix.Generators" Version="4.9.3.1" />
     <PackageReference Include="System.Reactive" Version="6.0.0" />
     
   </ItemGroup>
 
   <ItemGroup>
+    <ProjectReference Include="..\Conduit.API.Client\Conduit.API.Client.csproj" />
     <ProjectReference Include="..\Conduit.ServiceDefaults\Conduit.ServiceDefaults.csproj" />
     <ProjectReference Include="..\Conduit\Conduit.csproj" />
   </ItemGroup>

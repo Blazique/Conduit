@@ -10,7 +10,7 @@ using Microsoft.AspNetCore.Authentication.Cookies;
 using Microsoft.AspNetCore.Authentication.OpenIdConnect;
 using Microsoft.IdentityModel.Protocols.OpenIdConnect;
 
-var realWorldClient = new RealWorldClient("https://api.realworld.io/api/", new HttpClient());
+var apiClient = new Conduit.API.Client($"https://{Backend.Name}");
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -20,12 +20,7 @@ builder.Services.AddRazorComponents()
     .AddInteractiveServerComponents()
     .AddInteractiveWebAssemblyComponents();
 
-builder.Services.AddHttpClient(OpenIdConnectDefaults.AuthenticationScheme, client =>
-{
-    // Use service discovery to resolve the address
-    client.BaseAddress = new Uri($"https://{Conduit.IdentityServer.Name}");
-});
-
+builder.Services.Configure<IdentityServerSettings>(builder.Configuration.GetSection(nameof(IdentityServerSettings)));
 
 builder.Services
     .AddAuthentication(options =>
@@ -38,11 +33,7 @@ builder.Services
     {
         // Access the configuration system
         var configuration = builder.Configuration;
-
-        // Read the "Identity__Url" environment variable
-        var identityUrl = configuration["Identity:Url"];
-
-        options.Authority = identityUrl;
+        options.Authority = configuration[IdentityServerSettingsConfigurationKeys.IdentityServerSettings_Authority];
 
         options.ClientId = Frontend.Name;
 
@@ -62,23 +53,19 @@ builder.Services
 
         options.SaveTokens = true;
     });
-    
 
-builder.Services.AddScoped(provider => loginUser(realWorldClient, provider.GetService<ProtectedSessionStorage>()!));
-builder.Services.AddSingleton((_) => createUser(realWorldClient));
-builder.Services.AddScoped(provider => getUser(provider.GetService<ProtectedSessionStorage>()!));
-builder.Services.AddSingleton((_) => getProfile(realWorldClient));
-builder.Services.AddSingleton((_) => getArticlesFeed(realWorldClient));
-builder.Services.AddSingleton((_) => getAllRecentArticles(realWorldClient));
-builder.Services.AddSingleton((_) => markArticleAsFavorite(realWorldClient));
-builder.Services.AddSingleton((_) => unmarkArticleAsFavorite(realWorldClient));
-builder.Services.AddSingleton((_) => getTags(realWorldClient));
-builder.Services.AddSingleton((_) => getArticle(realWorldClient));
-builder.Services.AddSingleton((_) => getComments(realWorldClient));
-builder.Services.AddSingleton((_) => addComment(realWorldClient));
-builder.Services.AddSingleton((_) => deleteComment(realWorldClient));
-builder.Services.AddSingleton((_) => followUser(realWorldClient));
-builder.Services.AddSingleton((_) => unfollowUser(realWorldClient));
+builder.Services.AddSingleton((_) => getProfile(apiClient));
+builder.Services.AddSingleton((_) => getArticlesFeed(apiClient));
+builder.Services.AddSingleton((_) => getAllRecentArticles(apiClient));
+builder.Services.AddSingleton((_) => markArticleAsFavorite(apiClient));
+builder.Services.AddSingleton((_) => unmarkArticleAsFavorite(apiClient));
+builder.Services.AddSingleton((_) => getTags(apiClient));
+builder.Services.AddSingleton((_) => getArticle(apiClient));
+builder.Services.AddSingleton((_) => getComments(apiClient));
+builder.Services.AddSingleton((_) => addComment(apiClient));
+builder.Services.AddSingleton((_) => deleteComment(apiClient));
+builder.Services.AddSingleton((_) => followUser(apiClient));
+builder.Services.AddSingleton((_) => unfollowUser(apiClient));
 builder.Services.AddSingleton<MessageBus>();
 
 
@@ -123,17 +110,15 @@ app.Use(async (context, next) =>
     var csp = "default-src 'self'; object-src 'none'; style-src 'self'  https://demo.productionready.io https://code.ionicframework.com ;font-src https://fonts.googleapis.com https://code.ionicframework.com; img-src https://api.realworld.io; frame-ancestors 'none'; sandbox allow-forms allow-same-origin allow-scripts; base-uri 'self'; upgrade-insecure-requests;";
 
     // once for standards compliant browsers
-    if (!context.Response.Headers.ContainsKey("Content-Security-Policy"))
-    {
-        context.Response.Headers.Append("Content-Security-Policy", csp);
-    }
-    // and once again for IE
-    if (!context.Response.Headers.ContainsKey("X-Content-Security-Policy"))
-    {
-        context.Response.Headers.Append("X-Content-Security-Policy", csp);
-    }
-
-
+    //if (!context.Response.Headers.ContainsKey("Content-Security-Policy"))
+    //{
+    //    context.Response.Headers.Append("Content-Security-Policy", csp);
+    //}
+    //// and once again for IE
+    //if (!context.Response.Headers.ContainsKey("X-Content-Security-Policy"))
+    //{
+    //    context.Response.Headers.Append("X-Content-Security-Policy", csp);
+    //}
 
     await next();
 });

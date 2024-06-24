@@ -4,109 +4,61 @@ using Microsoft.AspNetCore.Components.Server.ProtectedBrowserStorage;
 using static Radix.Control.Result.Extensions;
 using static Radix.Control.Option.Extensions;
 using Radix.Data;
+using static Conduit.API.Extensions;
+using Conduit.API;
 
 namespace Conduit.Domain;
 
 public static class Implementation
 {
-    public static Func<RealWorldClient, ProtectedSessionStorage, Login> loginUser = (RealWorldClient client, ProtectedSessionStorage sessionStorage) => async (string? email, string? password) =>
-    {
-        try
-        {
-            var response = await client.LoginAsync(new LoginUserRequest
-            {
-                User = new LoginUserDto
-                {
-                    Email = email,
-                    Password = password
-                }
-            });
-            
-            await sessionStorage.SetAsync(LocalStorageKey.User, response.UserDto.ToUser());
-            return Ok<Conduit.Domain.User, string>(response.UserDto.ToUser());
-        }
-        catch (Exception e)
-        {
-            return Error<Conduit.Domain.User, string>(e.Message);
-        }
-    };
-
-    public static Func<RealWorldClient, CreateUser> createUser = (RealWorldClient client) => async (string? username, string? email, string? password) =>
-    {
-        try
-        {
-            var response = await client.CreateUserAsync(new NewUserRequest
-            {
-                User = new NewUser
-                {
-                    Username = username,
-                    Email = email,
-                    Password = password
-                }
-            });
-            return Ok<Conduit.Domain.User, string[]>(response.UserDto.ToUser());
-        }
-        catch (ApiException<GenericErrorModel> e)
-        {
-            return Error<Conduit.Domain.User, string[]>(e.Result.Errors.Select(error => $"{error.Key}: {error.Value.Aggregate((s, s1) => s + ", and " + s1)}").ToArray());
-        }
-        catch (Exception e)
-        {
-            return Error<Conduit.Domain.User, string[]>([e.Message]);
-        }
-    };
-
     public static Func<ProtectedSessionStorage, GetUser> getUser = (ProtectedSessionStorage sessionStorage) => async () =>
     {
         var user = await sessionStorage.GetAsync<Conduit.Domain.User>(LocalStorageKey.User);
         return user.Value is not null ? Some(user.Value) : None<Conduit.Domain.User>();
     };
 
-    public static Func<RealWorldClient, GetProfile> getProfile =  (RealWorldClient client) => async (string username) =>
+    public static Func<Client, GetProfile> getProfile =  (Client client) => async (string username) =>
     {
         var response = await client.GetProfileByUsernameAsync(username);
         return response is not null 
-            ? Some(response.Profile.ToProfile()) 
-            : None<Conduit.Domain.Profile>();
+            ? Some(response.ToProfile()) 
+            : None<Profile>();
     };
 
-    public static Func<RealWorldClient, GetAllRecentArticles> getAllRecentArticles =  (RealWorldClient client) => async (int? limit, int? offset, string? tag = null) =>
+    public static Func<Client, GetAllRecentArticles> getAllRecentArticles =  (Client client) => async (int? limit, int? offset, string? tag = null) =>
     {
         var response = await client.GetArticlesAsync(tag, null, null, limit, offset);
         return new ArticleFeed(response.ArticlesCount, response.Articles.Select(article => article.ToArticle()).ToList());
     };
 
-    public static Func<RealWorldClient, GetArticlesFeed> getArticlesFeed = (RealWorldClient client) => async (string token, int? limit, int? offset) =>
+    public static Func<Client, GetArticlesFeed> getArticlesFeed = (Client client) => async (int? limit, int? offset) =>
     {
-        client.SetAuthorizationHeader("Bearer", token);
         var response = await client.GetArticlesFeedAsync(limit, offset);
         return new ArticleFeed(response.ArticlesCount, response.Articles.Select(article => article.ToArticle()).ToList());
     };
 
-    public static Func<RealWorldClient, GetTags> getTags = (RealWorldClient client) => async () =>
+    public static Func<Client, GetTags> getTags = (Client client) => async () =>
     {
-        var response = await client.TagsAsync();
-        return [.. response.Tags];
+        var response = await client.GetTagsAsync();
+        return [.. response];
     };
 
-    public static Func<RealWorldClient, MarkArticleAsFavorite> markArticleAsFavorite = (RealWorldClient client) => async (string slug, string token) =>
+    public static Func<Client, MarkArticleAsFavorite> markArticleAsFavorite = (Client client) => async (string slug) =>
     {
-        client.SetAuthorizationHeader("Bearer", token);
-        await client.CreateArticleFavoriteAsync(slug);
+        await client.FavoriteArticleAsync(slug);
     };
 
-    public static Func<RealWorldClient, UnmarkArticleAsFavorite> unmarkArticleAsFavorite = (RealWorldClient client) => async (string slug, string token) =>
+    public static Func<Client, UnmarkArticleAsFavorite> unmarkArticleAsFavorite = (Client client) => async (string slug) =>
     {
-        client.SetAuthorizationHeader("Bearer", token);
-        await client.DeleteArticleFavoriteAsync(slug);
+        await client.UnfavoriteArticleAsync(slug);
     };
 
-    public static Func<RealWorldClient, GetArticle> getArticle = (RealWorldClient client) => async (Slug slug) =>
+    public static Func<Client, GetArticle> getArticle = (Client client) => async (Slug slug) =>
     {
         try
         {
             var response = await client.GetArticleAsync(slug);
-            return Ok<Article, string[]>(response.Article.ToArticle());
+            return Ok<Article, string[]>(response.ToArticle());
         }
         catch (ApiException<GenericErrorModel> e)
         {
@@ -122,26 +74,19 @@ public static class Implementation
         }
     };
 
-    public static Func<RealWorldClient, GetComments> getComments = (RealWorldClient client) => async (Slug slug) =>
+    public static Func<Client, GetComments> getComments = (Client client) => async (Slug slug) =>
     {
         var response = await client.GetArticleCommentsAsync(slug);
-        return response.Comments.Select(comment => new Comment(comment.Id, comment.Body, comment.CreatedAt, comment.UpdatedAt, comment.Author.ToProfile())).ToList();
+        return response.Select(comment => new Comment(comment.Id, comment.Body, comment.CreatedAt, comment.UpdatedAt, comment.Author.ToProfile())).ToList();
     };
 
-    public static Func<RealWorldClient, AddComment> addComment = (RealWorldClient client) => async (Slug slug, string body, string token) =>
+    public static Func<Client, AddComment> addComment = (Client client) => async (Slug slug, string body) =>
     {
-        client.SetAuthorizationHeader("Bearer", token);
-        
+       
         try
         {
-            var response = await client.CreateArticleCommentAsync(slug, new NewCommentRequest
-            {
-                Comment = new NewCommentDto
-                {
-                    Body = body
-                }
-            });
-            return Ok<Comment, string[]>(response.Comment.ToComment());
+            var response = await client.AddCommentAsync(slug, body);
+            return Ok<Comment, string[]>(response.ToComment());
         }
         catch (ApiException<GenericErrorModel> e)
         {
@@ -161,13 +106,12 @@ public static class Implementation
         }
     };
 
-    public static Func<RealWorldClient, DeleteComment> deleteComment = (RealWorldClient client) => async (Slug slug, int commentId, string token) =>
+    public static Func<Client, DeleteComment> deleteComment = (Client client) => async (Slug slug, int commentId) =>
     {
-        client.SetAuthorizationHeader("Bearer", token);
         
         try
         {
-            await client.DeleteArticleCommentAsync(slug, commentId);
+            await client.DeleteCommentAsync(slug, commentId);
             return Ok<Unit, string[]>(new ());
         }
         catch (ApiException<GenericErrorModel> e)
@@ -188,13 +132,12 @@ public static class Implementation
         }
     };
 
-    public static Func<RealWorldClient, FollowUser> followUser = (RealWorldClient client) => async (string username, string token) =>
+    public static Func<Client, FollowUser> followUser = (Client client) => async (string username) =>
     {
-        client.SetAuthorizationHeader("Bearer", token);
-        
+       
         try
         {
-            await client.FollowUserByUsernameAsync(username);
+            await client.FollowUserAsync(username);
             return Ok<Unit, string[]>(new ());
         }
         catch (ApiException<GenericErrorModel> e)
@@ -215,13 +158,12 @@ public static class Implementation
         }
     };
 
-    public static Func<RealWorldClient, UnfollowUser> unfollowUser = (RealWorldClient client) => async (string username, string token) =>
+    public static Func<Client, UnfollowUser> unfollowUser = (Client client) => async (string username) =>
     {
-        client.SetAuthorizationHeader("Bearer", token);
-        
+       
         try
         {
-            await client.UnfollowUserByUsernameAsync(username);
+            await client.UnfollowUserAsync(username);
             return Ok<Unit, string[]>(new ());
         }
         catch (ApiException<GenericErrorModel> e)
