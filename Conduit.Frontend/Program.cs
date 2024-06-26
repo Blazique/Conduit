@@ -6,6 +6,7 @@ using Microsoft.AspNetCore.Authentication.Cookies;
 using Microsoft.AspNetCore.Authentication.OpenIdConnect;
 using Microsoft.IdentityModel.Protocols.OpenIdConnect;
 using Conduit.API;
+using Conduit.Frontend;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -15,12 +16,18 @@ builder.Services.AddRazorComponents()
     .AddInteractiveServerComponents(options => options.DetailedErrors = builder.Environment.IsDevelopment())
     .AddInteractiveWebAssemblyComponents();
 
+builder.Services.AddHttpContextAccessor();
+builder.Services.AddScoped<TokenHandler>();
+
 builder.Services.Configure<IdentityServerSettings>(builder.Configuration.GetSection(nameof(IdentityServerSettings)));
+
 builder.Services.AddHttpClient<Client>(Backend.Name, client =>
 {
     client.BaseAddress = new Uri($"https://{Backend.Name}");
     client.DefaultRequestHeaders.Add("Accept", "application/json");
-});
+})
+    // Add the token handler to the client. This will ensure that the access token is added to the request headers.
+    .AddHttpMessageHandler<TokenHandler>();
 
 var authorityDirect = builder.Configuration[IdentityServerSettingsConfigurationKeys.IdentityServerSettings_Authority];
 
@@ -54,6 +61,8 @@ builder.Services
         options.SaveTokens = true;
     });
 
+builder.Services.AddScoped(sp => sp.GetRequiredService<IHttpClientFactory>()
+  .CreateClient(Backend.Name));
 builder.Services.AddTransient(serviceProvider =>
 {
     var apiClient = serviceProvider.GetRequiredService<Client>();
@@ -137,6 +146,10 @@ app.UseAuthorization();
 app.MapRazorComponents<App>()
     .AddInteractiveServerRenderMode()
     .AddInteractiveWebAssemblyRenderMode();
+
+app.MapGet("/login", async (HttpContext context) => await context.ChallengeAsync(OpenIdConnectDefaults.AuthenticationScheme, new
+            AuthenticationProperties
+{ RedirectUri = "/" }));
 
 // Add security headers
 app.Use(async (context, next) =>

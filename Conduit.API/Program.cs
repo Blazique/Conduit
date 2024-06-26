@@ -8,6 +8,10 @@ using Conduit.API.Seed;
 using Conduit.API.Dso;
 using Conduit.API;
 using System.Security.Claims;
+using IdentityModel.Client;
+using Duende.IdentityServer.Models;
+using Microsoft.AspNetCore.Http;
+using Duende.IdentityServer.Extensions;
 
 static string ToSlug(string title) => title.ToLower().Replace(" ", "-");
 
@@ -29,6 +33,16 @@ if (builder.Environment.IsDevelopment())
     martenStoreOptions.AutoCreateSchemaObjects = AutoCreate.All;
 }
 
+var identityServerAuthority = builder.Configuration[IdentityServerSettingsConfigurationKeys.IdentityServerSettings_Authority];
+
+builder.Services.AddAuthentication()
+    .AddJwtBearer(options =>
+    {
+        options.Authority = identityServerAuthority;
+        options.TokenValidationParameters.ValidateAudience = false;
+    });
+builder.Services.AddAuthorization();
+
 builder.Services
     .AddMarten(martenStoreOptions)
     .UseLightweightSessions()
@@ -36,6 +50,7 @@ builder.Services
     .InitializeWith(
         new InitialData(InitialDatasets.Profiles), 
         new InitialData(InitialDatasets.Articles));
+
 
 var app = builder.Build();
 
@@ -68,7 +83,8 @@ app.MapDelete("/profiles/{username}/follow", async (IDocumentSession session, st
 
 app.MapGet("/articles/feed", async (IDocumentSession session, ClaimsPrincipal principal, int limit, int offset) =>
 {
-    var query = session.Query<ArticleDso>().Where(a => a.Author.Username == principal.Identity.Name);
+    var nameIdentifier = principal.Claims.FindFirst(claim => claim.Type == ClaimTypes.NameIdentifier).Value;
+    var query = session.Query<ArticleDso>().Where(a => a.Author.Id == nameIdentifier);
     var queriedArticles = await query.Skip(offset).Take(limit).ToListAsync();
     var articles = new ArticlesDto(queriedArticles.Count, queriedArticles.Select(dso => dso.ToDto()).ToList());
     return Results.Ok(articles);
@@ -156,7 +172,7 @@ app.MapPost("/articles/{slug}/comments", async (IDocumentSession session, string
     article.Comments.Add(comment);
     await session.SaveChangesAsync();
     return Results.Created($"/articles/{slug}/comments/{comment.Id}", comment.ToDto());
-});
+}).RequireAuthorization();
 
 // Delete a comment from an article
 app.MapDelete("/articles/{slug}/comments/{commentId}", async (IDocumentSession session, string slug, string commentId) =>
@@ -207,6 +223,9 @@ app.MapGet("/tags", async (IDocumentSession session) =>
     var tags = await session.Query<ArticleDso>().SelectMany(a => a.TagList).Distinct().ToListAsync();
     return Results.Ok(tags);
 });
+
+app.UseAuthentication();
+app.UseAuthorization();
 
 app.Run();
 

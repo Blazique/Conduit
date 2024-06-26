@@ -5,7 +5,7 @@ namespace Conduit.API;
 public static class Extensions
 {
     public static ProfileDto ToProfileDto(this Profile profile) =>
-        new(profile.Username, profile.Bio, profile.Image, profile.Following);
+        new(profile.Id, profile.Username, profile.Bio, profile.Image, profile.Following);
 
     public static ArticleDto ToArticleDto(this Article article) =>
         new(article.Slug, article.Title, article.Description, article.Body, article.TagList.ToList(), article.CreatedAt, article.UpdatedAt, article.Favorited, article.FavoritesCount, article.Author.ToProfileDto());

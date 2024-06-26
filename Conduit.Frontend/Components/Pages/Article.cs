@@ -1,7 +1,11 @@
 
 using System.Diagnostics.Contracts;
+using System.Security.Claims;
 using Conduit.Domain;
+using IdentityModel;
+using k8s.KubeConfigModels;
 using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Components.Authorization;
 using Microsoft.AspNetCore.Components.Rendering;
 using Radix.Data;
 using static Radix.Control.Option.Extensions;
@@ -19,10 +23,10 @@ namespace Conduit.Components
         public string Slug { get; set; } = "";
 
         [Inject]
-        public GetArticle GetArticle { get; set; } = (_) => Task.FromResult(Error<Domain.Article, string[]>(["Article not found"]));
+        public GetProfile GetProfile { get; set; } = (_) => Task.FromResult(None<Domain.Profile>());
 
         [Inject]
-        public GetUser GetUser { get; set; } = () => Task.FromResult(None<User>());
+        public GetArticle GetArticle { get; set; } = (_) => Task.FromResult(Error<Domain.Article, string[]>(["Article not found"]));
 
         [Inject]
         public GetComments GetComments { get; set; } = (_) => Task.FromResult(new List<Comment>());
@@ -48,25 +52,38 @@ namespace Conduit.Components
         [Inject]
         public NavigationManager? Navigation { get; set; }
 
+        
+
+        [CascadingParameter]
+        private Task<AuthenticationState>? AuthState { get; set; }
+
         protected override async Task<ArticlePageModel> Initialize(ArticlePageModel model)
         {
-            var userOption = await GetUser();
-            User user = null!;
-            switch (userOption)
+            if (AuthState == null)
             {
-                case Some<User>(var usr):
-                    user = usr;
-                    break;
-                case None<User>: break;
+                return model;
             }
+
+            AuthenticationState authState = await AuthState;
 
             var article = await GetArticle((Slug)Slug);
             
             switch (article)
             {
                 case Ok<Domain.Article, string[]>(var a):
-                    var comments = await GetComments((Slug)a.Slug);
-                    return model with { Article = a, User = user, Comments = comments};
+                    var comments = new List<Comment>();
+                    var profile = None<Domain.Profile>();
+                    if (authState.User.Identity.IsAuthenticated)
+                    {
+                        var userName = authState.User.Claims.Where(claim => claim.Type == "name").FirstOrDefault()?.Value;
+                        profile = await GetProfile(a.Author.Username);
+                        comments = await GetComments((Slug)a.Slug);
+                    }
+                    return profile switch
+                    {
+                        Some<Domain.Profile>(var p) => model with { Article = a, Comments = comments, Profile = p },
+                        None<Domain.Profile> => model with { Article = a, Comments = comments },
+                    };
                 case Error<Domain.Article, string[]> (var errors):
                     return model with {Errors = errors};
             }
@@ -158,7 +175,7 @@ namespace Conduit.Components
                 div([@class(["article-actions"])], [
                     div([@class(["article-meta"])], 
                         ArticleMeta(model, dispatch)),
-                        model.User is not null
+                        model.Profile is not null
                         ?
                             div([@class(["row"])], [
                                 div([@class(["col-xs-12", "col-md-8", "offset-md-2"])], [
@@ -168,7 +185,7 @@ namespace Conduit.Components
                                                 )], [])
                                             ]),
                                         div([@class(["card-footer"])], [
-                                            img([src([model.User.Image]), @class(["comment-author-img"])], []),
+                                            img([src([model.Profile.Image]), @class(["comment-author-img"])], []),
                                             button([@class(["btn", "btn-sm", "btn-primary"]), type(["button"]), on.click(async _ => await dispatch(new PostCommentCommand(model.NewComment)))], [text("Post Comment")])
                                         ])
                                     ])
@@ -235,11 +252,11 @@ namespace Conduit.Components
 
             ];
 
-        private static bool CurrentUserIsArticleAuthor(ArticlePageModel model) => 
-            model.User is not null && model.User.Username == model.Article.Author.Username;
+        private static bool CurrentUserIsArticleAuthor(ArticlePageModel model) =>
+            model.Profile is not null && model.Profile.Username == model.Article.Author.Username;
 
-        private static bool CurrentUserIsCommentAuthor(ArticlePageModel model, Comment comment) => 
-            comment.Author.Username == model.User?.Username;
+        private static bool CurrentUserIsCommentAuthor(ArticlePageModel model, Comment comment) =>
+            model.Profile is not null && comment.Author.Username == model.Profile.Username;
 
         private static Node[] ShowFollowAndFavoriteButtons(ArticlePageModel model, Func<ArticlePageCommand, Task> dispatch)
         => [
@@ -285,10 +302,11 @@ namespace Conduit.Components
     public record ArticlePageModel
     {
         public Domain.Article Article { get; init; } = new Domain.Article("", "", "", "", [], DateTimeOffset.Now, DateTimeOffset.Now, false, 0, new Domain.Profile("", "", "", false));
-        public User? User { get; init; } = null;
         public List<Comment> Comments { get; internal set; } = [];
         public string[] Errors { get; internal set; } = [];
-        public string NewComment { get; internal set; } = ""; 
+        public string NewComment { get; internal set; } = "";
+        public Domain.Profile? Profile {get;  init;}
+
     }
 
 }

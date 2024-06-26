@@ -10,7 +10,10 @@ public partial record Slug;
 public record Comment(string Id, string Body, DateTimeOffset CreatedAt, DateTimeOffset UpdatedAt, Profile Author);
 public record User(int Id, string Email, string Token, string Username, string Bio, string Image);
 
-public record Profile(string Username, string Bio, string Image, bool Following);
+public record Profile(string Username, string Bio, string Image, bool Following)
+{
+    public string Id { get; set; }
+}
 
 public record ArticleFeed(int ArticlesCount, List<Article> Articles);
 
