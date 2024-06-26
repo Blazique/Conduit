@@ -2,21 +2,17 @@ using Conduit;
 
 var builder = DistributedApplication.CreateBuilder(args);
 
-var identityServerAuthorityEnvironmentVariableName = IdentityServerSettingsConfigurationKeys.IdentityServerSettings_Authority.Replace(':', '_');
-
-var postgres = builder.AddPostgres(Postgres.Name);
-var conduitDatabase = postgres.AddDatabase(ConduitDatabase.Name);
-var identityDatabase = postgres.AddDatabase(IdentityDatabase.Name);
+var postgres = builder.AddPostgres(ConduitDatabase.Name);
 
 var identityServer = builder
     .AddProject<Projects.Conduit_IdentityServer>(name: IdentityServer.Name)
-    .WithReference(identityDatabase);
+    .WithReference(postgres);
 var identityEndpoint = identityServer.GetEndpoint("https");
 var api = builder.AddProject<Projects.Conduit_API>(Backend.Name)
-    .WithEnvironment(identityServerAuthorityEnvironmentVariableName, identityEndpoint)
-    .WithReference(conduitDatabase);
+    .WithEnvironment(IdentityServerSettingsConfigurationKeys.IdentityServerSettings_Authority, identityEndpoint)
+    .WithReference(postgres);
 builder.AddProject<Projects.Conduit_Frontend>(Frontend.Name)
     .WithReference(api)
-    .WithEnvironment(identityServerAuthorityEnvironmentVariableName, identityEndpoint);
+    .WithEnvironment(IdentityServerSettingsConfigurationKeys.IdentityServerSettings_Authority, identityEndpoint);
 
 builder.Build().Run();

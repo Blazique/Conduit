@@ -11,46 +11,43 @@ public class Client
 {
     private readonly HttpClient _httpClient;
 
-    public Client(string baseUrl)
+    public Client(HttpClient httpClient)
     {
-        _httpClient = new HttpClient
-        {
-            BaseAddress = new Uri(baseUrl)
-        };
+        _httpClient = httpClient;
     }
 
-    public async Task<ArticleFeedDto> GetArticlesFeedAsync(int? limit, int? offset)
+    public async Task<ArticlesDto> GetArticlesFeedAsync(int? limit, int? offset)
     {
-        return await _httpClient.GetFromJsonAsync<ArticleFeedDto>($"/api/articles/feed?limit={limit}&offset={offset}");
+        return await _httpClient.GetFromJsonAsync<ArticlesDto>($"/articles/feed?limit={limit}&offset={offset}");
     }
 
-    public async Task<ArticleFeedDto> GetArticlesAsync(string? tag, string? author, bool? favorited, int? limit, int? offset)
+    public async Task<ArticlesDto> GetArticlesAsync(string? tag, string? author, bool? favorited, int? limit, int? offset)
     {
-        return await _httpClient.GetFromJsonAsync<ArticleFeedDto>($"/api/articles?limit={limit}&offset={offset}&tag={tag}&author={author}");
+        return await _httpClient.GetFromJsonAsync<ArticlesDto>($"/articles?limit={limit}&offset={offset}&tag={tag}&author={author}");
     }
 
     public async Task<ArticleDto> GetArticleAsync(string slug)
     {
-        return await _httpClient.GetFromJsonAsync<ArticleDto>($"/api/articles/{slug}");
+        return await _httpClient.GetFromJsonAsync<ArticleDto>($"/articles/{slug}");
     }
 
     public async Task<ArticleDto> CreateArticleAsync(CreateArticleDto createArticleDto)
     {
-        var response = await _httpClient.PostAsJsonAsync("/api/articles", createArticleDto);
+        var response = await _httpClient.PostAsJsonAsync("/articles", createArticleDto);
         response.EnsureSuccessStatusCode();
         return await response.Content.ReadFromJsonAsync<ArticleDto>();
     }
 
     public async Task<ArticleDto> UpdateArticleAsync(string id, UpdateArticleDto updateArticleDto)
     {
-        var response = await _httpClient.PutAsJsonAsync($"/api/articles/{id}", updateArticleDto);
+        var response = await _httpClient.PutAsJsonAsync($"/articles/{id}", updateArticleDto);
         response.EnsureSuccessStatusCode();
         return await response.Content.ReadFromJsonAsync<ArticleDto>();
     }
 
     public async Task DeleteArticleAsync(string id)
     {
-        var response = await _httpClient.DeleteAsync($"/api/articles/{id}");
+        var response = await _httpClient.DeleteAsync("$/articles/{id}");
         response.EnsureSuccessStatusCode();
     }
 
@@ -75,37 +72,37 @@ public class Client
 
     public async Task<CommentDto> AddCommentAsync(string slug, string body)
     {
-        var response = await _httpClient.PostAsJsonAsync($"/api/articles/{slug}/comments", new { comment = new { body } });
+        var response = await _httpClient.PostAsJsonAsync($"/articles/{slug}/comments", new { comment = new { body } });
         response.EnsureSuccessStatusCode();
         return await response.Content.ReadFromJsonAsync<CommentDto>();
     }
 
-    public async Task DeleteCommentAsync(string slug, int commentId)
+    public async Task DeleteCommentAsync(string slug, string commentId)
     {
-        var response = await _httpClient.DeleteAsync($"/api/articles/{slug}/comments/{commentId}");
+        var response = await _httpClient.DeleteAsync($"/articles/{slug}/comments/{commentId}");
         response.EnsureSuccessStatusCode();
     }
 
    public async Task<List<CommentDto>> GetArticleCommentsAsync(Slug slug)
     {
-        return await _httpClient.GetFromJsonAsync<List<CommentDto>>($"/api/articles/{slug}/comments");
+        return await _httpClient.GetFromJsonAsync<List<CommentDto>>($"/articles/{slug}/comments");
     }
 
     public async Task<List<string>> GetTagsAsync()
     {
-        return await _httpClient.GetFromJsonAsync<List<string>>("/api/tags");
+        return await _httpClient.GetFromJsonAsync<List<string>>("/tags");
     }
 
     public async Task<ArticleDto> FavoriteArticleAsync(string slug)
     {
-        var response = await _httpClient.PostAsync($"/api/articles/{slug}/favorite", null);
+        var response = await _httpClient.PostAsync($"/articles/{slug}/favorite", null);
         response.EnsureSuccessStatusCode();
         return await response.Content.ReadFromJsonAsync<ArticleDto>();
     }
 
     public async Task<ArticleDto> UnfavoriteArticleAsync(string slug)
     {
-        var response = await _httpClient.DeleteAsync($"/api/articles/{slug}/favorite");
+        var response = await _httpClient.DeleteAsync($"/articles/{slug}/favorite");
         response.EnsureSuccessStatusCode();
         return await response.Content.ReadFromJsonAsync<ArticleDto>();
     }

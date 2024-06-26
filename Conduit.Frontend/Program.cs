@@ -1,26 +1,28 @@
-using Conduit.ApiClient;
 using Conduit.Components;
 using static Conduit.Domain.Implementation;
-using Microsoft.AspNetCore.Components.Server.ProtectedBrowserStorage;
 using Conduit;
 using Microsoft.AspNetCore.Authentication;
-using Microsoft.Extensions.DependencyInjection;
-using static System.Net.WebRequestMethods;
 using Microsoft.AspNetCore.Authentication.Cookies;
 using Microsoft.AspNetCore.Authentication.OpenIdConnect;
 using Microsoft.IdentityModel.Protocols.OpenIdConnect;
-
-var apiClient = new Conduit.API.Client($"https://{Backend.Name}");
+using Conduit.API;
 
 var builder = WebApplication.CreateBuilder(args);
 
 builder.AddServiceDefaults();
-
+builder.Services.AddCascadingAuthenticationState();
 builder.Services.AddRazorComponents()
-    .AddInteractiveServerComponents()
+    .AddInteractiveServerComponents(options => options.DetailedErrors = builder.Environment.IsDevelopment())
     .AddInteractiveWebAssemblyComponents();
 
 builder.Services.Configure<IdentityServerSettings>(builder.Configuration.GetSection(nameof(IdentityServerSettings)));
+builder.Services.AddHttpClient<Client>(Backend.Name, client =>
+{
+    client.BaseAddress = new Uri($"https://{Backend.Name}");
+    client.DefaultRequestHeaders.Add("Accept", "application/json");
+});
+
+var authorityDirect = builder.Configuration[IdentityServerSettingsConfigurationKeys.IdentityServerSettings_Authority];
 
 builder.Services
     .AddAuthentication(options =>
@@ -31,9 +33,7 @@ builder.Services
     .AddCookie(CookieAuthenticationDefaults.AuthenticationScheme)
     .AddOpenIdConnect(OpenIdConnectDefaults.AuthenticationScheme, options =>
     {
-        // Access the configuration system
-        var configuration = builder.Configuration;
-        options.Authority = configuration[IdentityServerSettingsConfigurationKeys.IdentityServerSettings_Authority];
+        options.Authority = authorityDirect;
 
         options.ClientId = Frontend.Name;
 
@@ -54,21 +54,68 @@ builder.Services
         options.SaveTokens = true;
     });
 
-builder.Services.AddSingleton((_) => getProfile(apiClient));
-builder.Services.AddSingleton((_) => getArticlesFeed(apiClient));
-builder.Services.AddSingleton((_) => getAllRecentArticles(apiClient));
-builder.Services.AddSingleton((_) => markArticleAsFavorite(apiClient));
-builder.Services.AddSingleton((_) => unmarkArticleAsFavorite(apiClient));
-builder.Services.AddSingleton((_) => getTags(apiClient));
-builder.Services.AddSingleton((_) => getArticle(apiClient));
-builder.Services.AddSingleton((_) => getComments(apiClient));
-builder.Services.AddSingleton((_) => addComment(apiClient));
-builder.Services.AddSingleton((_) => deleteComment(apiClient));
-builder.Services.AddSingleton((_) => followUser(apiClient));
-builder.Services.AddSingleton((_) => unfollowUser(apiClient));
+builder.Services.AddTransient(serviceProvider =>
+{
+    var apiClient = serviceProvider.GetRequiredService<Client>();
+    return getProfile(apiClient);
+});
+builder.Services.AddTransient(serviceProvider =>
+{
+    var apiClient = serviceProvider.GetRequiredService<Client>();
+    return getArticlesFeed(apiClient);
+});
+builder.Services.AddTransient(serviceProvider =>
+{
+    var apiClient = serviceProvider.GetRequiredService<Client>();
+    return getAllRecentArticles(apiClient);
+});
+builder.Services.AddTransient(serviceProvider =>
+{
+    var apiClient = serviceProvider.GetRequiredService<Client>();
+    return markArticleAsFavorite(apiClient);
+});
+builder.Services.AddTransient(serviceProvider =>
+{
+    var apiClient = serviceProvider.GetRequiredService<Client>();
+    return unmarkArticleAsFavorite(apiClient);
+});
+builder.Services.AddTransient(serviceProvider =>
+{
+    var apiClient = serviceProvider.GetRequiredService<Client>();
+    return getTags(apiClient);
+});
+builder.Services.AddTransient(serviceProvider =>
+{
+    var apiClient = serviceProvider.GetRequiredService<Client>();
+    return getArticle(apiClient);
+});
+builder.Services.AddTransient(serviceProvider =>
+{
+    var apiClient = serviceProvider.GetRequiredService<Client>();
+    return getComments(apiClient);
+});
+builder.Services.AddTransient(serviceProvider =>
+{
+    var apiClient = serviceProvider.GetRequiredService<Client>();
+    return addComment(apiClient);
+});
+
+builder.Services.AddTransient(serviceProvider =>
+{
+    var apiClient = serviceProvider.GetRequiredService<Client>();
+    return deleteComment(apiClient);
+});
+builder.Services.AddTransient(serviceProvider =>
+{
+    var apiClient = serviceProvider.GetRequiredService<Client>();
+    return followUser(apiClient);
+});
+builder.Services.AddTransient(serviceProvider =>
+{
+    var apiClient = serviceProvider.GetRequiredService<Client>();
+    return unfollowUser(apiClient);
+});
 builder.Services.AddSingleton<MessageBus>();
-
-
 
 var app = builder.Build();
 
@@ -94,7 +141,7 @@ app.MapRazorComponents<App>()
 // Add security headers
 app.Use(async (context, next) =>
 {
-    
+
     // https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/X-Content-Type-Options
     context.Response.Headers.Append("X-Content-Type-Options", "nosniff");
     // https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/X-Frame-Options

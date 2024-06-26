@@ -1,11 +1,11 @@
-using Conduit.ApiClient;
+
 using Microsoft.AspNetCore.Components.Web;
 using Radix;
 using Radix.Data;
-using Microsoft.AspNetCore.Components.Server.ProtectedBrowserStorage;
+
 using Conduit.Domain;
 using static Radix.Control.Result.Extensions;
-using Microsoft.AspNetCore.Authorization;
+
 
 namespace Conduit.Components;
 
@@ -13,8 +13,6 @@ namespace Conduit.Components;
 [InteractiveServerRenderMode(Prerender = true)]
 public class Register : Component<RegisterModel, RegisterCommand>
 {
-    [Inject]
-    public Domain.Login Login { get; set; } = (_, __) => Task.FromResult(Error<Domain.User, string>("Login function has not been added to dependency container"));
 
     [Inject]
     public CreateUser CreateUser { get; set; } = (_, __, ___) => Task.FromResult(Error<Domain.User, string[]>(["CreateUser function has not been added to dependency container"]));
@@ -41,26 +39,22 @@ public class Register : Component<RegisterModel, RegisterCommand>
                                     var createUserResponse = await CreateUser(model.UserName, model.Email, model.Password);
                                     switch(createUserResponse){
                                         case Ok<Domain.User, string[]> _:
-                                            var loginResponse = await Login(model.Email, model.Password);
-                                            switch(loginResponse){
-                                                case Ok<Domain.User, string>(var user) when user != null:
-                                                    MessageBus.Publish(new UserLoggedIn(user));
-                                                    // Redirect to the home page
-                                                    Navigation!.NavigateTo("/");
-                                                    break;
-                                                case Error<Domain.User, string>(var error):
-                                                    model = model with { Errors = [error] };
-                                                    break;
-                                            }     
+                                            //var loginResponse = await Login(model.Email, model.Password);
+                                            //switch(loginResponse){
+                                            //    case Ok<Domain.User, string>(var user) when user != null:
+                                            //        MessageBus.Publish(new UserLoggedIn(user));
+                                            //        // Redirect to the home page
+                                            //        Navigation!.NavigateTo("/");
+                                            //        break;
+                                            //    case Error<Domain.User, string>(var error):
+                                            //        model = model with { Errors = [error] };
+                                            //        break;
+                                            //}     
                                             break;
                                         case Error<Domain.User, string[]>(var errors):
                                             model = model with { Errors = errors };
                                             break;
                                     }                           
-                                }
-                                catch (ApiException<GenericErrorModel> e)
-                                {
-                                    model = model with { Errors = e.Result.Errors.Select(error => $"{error.Key}: {error.Value.Aggregate((s, s1) => s + ", and " + s1)}").ToArray() };
                                 }
                                 catch (Exception e)
                                 {

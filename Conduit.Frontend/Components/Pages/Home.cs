@@ -1,8 +1,11 @@
 
 using System.Runtime.CompilerServices;
+using System.Security.Claims;
 using Blazique.Web.Html.Names.Elements;
 using Conduit.Domain;
+using k8s.KubeConfigModels;
 using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Components.Authorization;
 using Radix.Data;
 using static Radix.Control.Option.Extensions;
 
@@ -10,15 +13,15 @@ namespace Conduit.Components;
 
 [Route("/")]
 [InteractiveServerRenderMode(Prerender = false)]
-[Authorize]
 public class Home : Component<HomePageModel, HomePageCommand>
 {
+    private ClaimsPrincipal? _user;
+
+    [CascadingParameter]
+    private Task<AuthenticationState>? AuthState { get; set; }
 
     [Inject]
-    public GetUser GetUser { get; set; } = () => Task.FromResult(None<User>());
-
-    [Inject]
-    public GetAllRecentArticles GetAllRecentArticlesFeed { get; set; } = (_, _, _) => Task.FromResult(new ArticleFeed(0, []));
+    public GetAllRecentArticles GetAllRecentArticles { get; set; } = (_, _, _) => Task.FromResult(new ArticleFeed(0, []));
 
     [Inject]
     public GetArticlesFeed GetArticlesFeed { get; set; } = (_, _) => Task.FromResult(new ArticleFeed(0, []));
@@ -32,25 +35,33 @@ public class Home : Component<HomePageModel, HomePageCommand>
     [Inject]
     public GetTags GetTags { get; set; } = () => Task.FromResult(Array.Empty<string>());
 
+
     protected override async Task<HomePageModel> Initialize(HomePageModel model) 
     {
+        if (AuthState == null)
+        {
+            return model;
+        }
+
+        AuthenticationState authState = await AuthState;
+        _user = authState.User;
+
         model.SelectedFeed = SelectedFeed.GlobalFeed;
         model.PageSize = 10;
         model.Page = 1;
-        model.Feed = await GetAllRecentArticlesFeed(model.PageSize, 0);
-        model.TotalPages = (model.Feed.ArticlesCount + model.PageSize - 1) / model.PageSize;
         model.Tags = await GetTags();
 
-        switch (await GetUser())
+        if(_user is not null && _user.Identity.IsAuthenticated)
         {
-            case Some<User>(User user):
-                model.User = user;
-                model.Feed = await GetAllRecentArticlesFeed(model.PageSize, (model.Page - 1) * model.PageSize);
-                model.TotalPages = (model.Feed.ArticlesCount + model.PageSize - 1) / model.PageSize;
-                break;
-            case None<User>:
-                break;
+            model.Feed = await GetArticlesFeed(model.PageSize, (model.Page - 1) * model.PageSize);
+            model.TotalPages = (model.Feed.ArticlesCount + model.PageSize - 1) / model.PageSize;
         }
+        else
+        {
+            model.Feed = await GetAllRecentArticles(model.PageSize, 0);
+            model.TotalPages = (model.Feed.ArticlesCount + model.PageSize - 1) / model.PageSize;
+        }
+
         return model;
     }
 
@@ -72,7 +83,7 @@ public class Home : Component<HomePageModel, HomePageCommand>
                 model.SelectedPopularTag = selectPopularTag.Tag;
                 model.SelectedFeed = SelectedFeed.SelectedPopularTag;
                 model.Page = 1;
-                model.Feed = await GetAllRecentArticlesFeed(model.PageSize, (model.Page - 1) * model.PageSize, model.SelectedPopularTag);
+                model.Feed = await GetAllRecentArticles(model.PageSize, (model.Page - 1) * model.PageSize, model.SelectedPopularTag);
                 model.TotalPages = model.Feed is not null ? (model.Feed.ArticlesCount + model.PageSize - 1) / model.PageSize : 0;
                 break;
             case InvertMarkArticleAsFavorite invertMarkArticleAsFavorite:
@@ -98,10 +109,10 @@ public class Home : Component<HomePageModel, HomePageCommand>
                     model.Feed = await GetArticlesFeed(model.PageSize, (model.Page - 1) * model.PageSize);
                     break;
                 case SelectedFeed.GlobalFeed:
-                    model.Feed = await GetAllRecentArticlesFeed(model.PageSize, (model.Page - 1) * model.PageSize);
+                    model.Feed = await GetAllRecentArticles(model.PageSize, (model.Page - 1) * model.PageSize);
                     break;
                 case SelectedFeed.SelectedPopularTag:
-                    model.Feed = await GetAllRecentArticlesFeed(model.PageSize, (model.Page - 1) * model.PageSize, model.SelectedPopularTag);
+                    model.Feed = await GetAllRecentArticles(model.PageSize, (model.Page - 1) * model.PageSize, model.SelectedPopularTag);
                     break;
             }
         }
@@ -121,7 +132,7 @@ public class Home : Component<HomePageModel, HomePageCommand>
                 div([@class(["col-md-9"])], [
                 div([@class(["feed-toggle"])], [
                     ul([@class(["nav", "nav-pills", "outline-active"])], [
-                        model.User is not null 
+                        _user is not null && _user.Identity.IsAuthenticated
                         ? li([@class(["nav-item"])], [
                             a([@class(["nav-link", model.SelectedFeed == SelectedFeed.YourFeed ? "active" : ""]), attribute("style", ["cursor:hand"]), on.click(_ => dispatch(new SetFeed(SelectedFeed.YourFeed)))], [text("Your Feed")])
                             ])
@@ -207,7 +218,6 @@ public record HomePageModel
     public int Page { get; internal set; }
     public ArticleFeed? Feed { get; internal set; }
     public int TotalPages { get; internal set; }
-    public User? User { get; internal set; }
     public string? SelectedPopularTag { get; internal set; }
     public string[]? Tags { get; internal set; }
 }

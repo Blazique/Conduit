@@ -1,7 +1,7 @@
 
-using Conduit.ApiClient;
+
 using Conduit.Domain;
-using Microsoft.AspNetCore.Authorization;
+
 using Radix.Data;
 using static Radix.Control.Option.Extensions;
 
@@ -18,7 +18,7 @@ public class Profile : Component<ProfilePageModel, ProfilePageCommand>
     public GetUser GetUser { get; set; } = () => Task.FromResult(None<Domain.User>());
 
     [Inject]
-    public GetArticlesFeed GetArticlesFeed { get; set; } = (_, _, _) => Task.FromResult(new ArticleFeed(0,[]));
+    public GetArticlesFeed GetArticlesFeed { get; set; } = (_, _) => Task.FromResult(new ArticleFeed(0,[]));
 
     [Inject]
     public NavigationManager? Navigation { get; set; }
@@ -42,7 +42,7 @@ public class Profile : Component<ProfilePageModel, ProfilePageCommand>
         {
             case Some<Domain.User>(var user):
                 model.User = user;
-                model.Feed = await GetArticlesFeed(user.Token, model.PageSize, 0);
+                model.Feed = await GetArticlesFeed( model.PageSize, 0);
                 model.TotalPages = (model.Feed.ArticlesCount +  model.PageSize - 1) /  model.PageSize;
                 break;
             case None<Domain.User>:
@@ -129,7 +129,7 @@ public class Profile : Component<ProfilePageModel, ProfilePageCommand>
             {
                 case ChangeProfileFeedPage(var page):
                     model.Page = page;
-                    model.Feed = Model.User is not null ? await GetArticlesFeed(Model.User.Token, Model.PageSize, (Model.Page - 1) * Model.PageSize) : new ArticleFeed(0, []);
+                    model.Feed = Model.User is not null ? await GetArticlesFeed(Model.PageSize, (Model.Page - 1) * Model.PageSize) : new ArticleFeed(0, []);
                     break;
             }
             return model;

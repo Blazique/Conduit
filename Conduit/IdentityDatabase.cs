@@ -1,6 +1,6 @@
 ﻿namespace Conduit;
 
-public record IdentityDatabase : Database, Component<IdentityDatabase>
+public record IdentityDatabase : ConduitDatabase, Component<IdentityDatabase>
 {
     public static string Name => "identity";
 

@@ -1,4 +1,5 @@
-﻿using Microsoft.AspNetCore.Components.Routing;
+﻿using Microsoft.AspNetCore.Components.Authorization;
+using Microsoft.AspNetCore.Components.Routing;
 
 using static Blazique.Attribute;
 
@@ -11,10 +12,11 @@ public class Routes : Blazique.Web.Component
             component<Router>([attribute("AppAssembly", [typeof(Program).Assembly]), 
                 fragment<Microsoft.AspNetCore.Components.RouteData>("Found", routeData =>
                 [
-                    component<RouteView>([attribute("RouteData", [routeData]), attribute("DefaultLayout", [typeof(Layout.MainLayout)])], []),
+                    component<AuthorizeRouteView>([attribute("RouteData", [routeData]), attribute("DefaultLayout", [typeof(Layout.MainLayout)])], []),
                     component<FocusOnNavigate>([attribute("RouteData", [routeData]), attribute("Selector", ["h1"])], [])
                 ])
-            ],[])            
+            ],[])
+            
         ];
 }
 

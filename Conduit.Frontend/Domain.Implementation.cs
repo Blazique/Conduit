@@ -1,5 +1,3 @@
-using Conduit.ApiClient;
-using Conduit.Domain;
 using Microsoft.AspNetCore.Components.Server.ProtectedBrowserStorage;
 using static Radix.Control.Result.Extensions;
 using static Radix.Control.Option.Extensions;
@@ -55,23 +53,10 @@ public static class Implementation
 
     public static Func<Client, GetArticle> getArticle = (Client client) => async (Slug slug) =>
     {
-        try
-        {
-            var response = await client.GetArticleAsync(slug);
-            return Ok<Article, string[]>(response.ToArticle());
-        }
-        catch (ApiException<GenericErrorModel> e)
-        {
-            return Error<Article, string[]>(e.Result.Errors.Select(error => $"{error.Key}: ").ToArray());
-        }
-        catch (ApiException e)
-        {
-            return e.StatusCode switch
-            {
-                404 => Error<Article, string[]>(["Article not found"]),
-                _ => Error<Article, string[]>([e.Message]),
-            };
-        }
+
+        var response = await client.GetArticleAsync(slug);
+        return Ok<Article, string[]>(response.ToArticle());
+
     };
 
     public static Func<Client, GetComments> getComments = (Client client) => async (Slug slug) =>
@@ -82,105 +67,33 @@ public static class Implementation
 
     public static Func<Client, AddComment> addComment = (Client client) => async (Slug slug, string body) =>
     {
-       
-        try
-        {
-            var response = await client.AddCommentAsync(slug, body);
-            return Ok<Comment, string[]>(response.ToComment());
-        }
-        catch (ApiException<GenericErrorModel> e)
-        {
-            return Error<Comment, string[]>(e.Result.Errors.Select(error => $"{error.Key}: ").ToArray());
-        }
-        catch (ApiException e)
-        {
-            return e.StatusCode switch
-            {
-                401 => Error<Comment, string[]>(["Not authorized to add a comment"]),
-                _ => Error<Comment, string[]>([e.Message]),
-            };
-        }
-        catch(Exception e)
-        {
-            return Error<Comment, string[]>([e.Message]);
-        }
+
+        var response = await client.AddCommentAsync(slug, body);
+        return Ok<Comment, string[]>(response.ToComment());
+        
     };
 
-    public static Func<Client, DeleteComment> deleteComment = (Client client) => async (Slug slug, int commentId) =>
+    public static Func<Client, DeleteComment> deleteComment = (Client client) => async (Slug slug, string commentId) =>
     {
+
+        await client.DeleteCommentAsync(slug, commentId);
+        return Ok<Unit, string[]>(new ());
         
-        try
-        {
-            await client.DeleteCommentAsync(slug, commentId);
-            return Ok<Unit, string[]>(new ());
-        }
-        catch (ApiException<GenericErrorModel> e)
-        {
-            return Error<Unit, string[]>(e.Result.Errors.Select(error => $"{error.Key}: ").ToArray());
-        }
-        catch (ApiException e)
-        {
-            return e.StatusCode switch
-            {
-                401 => Error<Unit, string[]>(["Not authorized to delete a comment"]),
-                _ => Error<Unit, string[]>([e.Message]),
-            };
-        }
-        catch(Exception e)
-        {
-            return Error<Unit, string[]>([e.Message]);
-        }
     };
 
     public static Func<Client, FollowUser> followUser = (Client client) => async (string username) =>
     {
-       
-        try
-        {
-            await client.FollowUserAsync(username);
-            return Ok<Unit, string[]>(new ());
-        }
-        catch (ApiException<GenericErrorModel> e)
-        {
-            return Error<Unit, string[]>(e.Result.Errors.Select(error => $"{error.Key}: ").ToArray());
-        }
-        catch (ApiException e)
-        {
-            return e.StatusCode switch
-            {
-                401 => Error<Unit, string[]>(["Not authorized to follow a user"]),
-                _ => Error<Unit, string[]>([e.Message]),
-            };
-        }
-        catch(Exception e)
-        {
-            return Error<Unit, string[]>([e.Message]);
-        }
+
+        await client.FollowUserAsync(username);
+        return Ok<Unit, string[]>(new ());
+
     };
 
     public static Func<Client, UnfollowUser> unfollowUser = (Client client) => async (string username) =>
     {
-       
-        try
-        {
-            await client.UnfollowUserAsync(username);
-            return Ok<Unit, string[]>(new ());
-        }
-        catch (ApiException<GenericErrorModel> e)
-        {
-            return Error<Unit, string[]>(e.Result.Errors.Select(error => $"{error.Key}: ").ToArray());
-        }
-        catch (ApiException e)
-        {
-            return e.StatusCode switch
-            {
-                401 => Error<Unit, string[]>(["Not authorized to unfollow a user"]),
-                _ => Error<Unit, string[]>([e.Message]),
-            };
-        }
-        catch(Exception e)
-        {
-            return Error<Unit, string[]>([e.Message]);
-        }
+
+        await client.UnfollowUserAsync(username);
+        return Ok<Unit, string[]>(new ());
+        
     };
 }

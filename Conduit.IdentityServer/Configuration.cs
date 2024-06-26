@@ -33,7 +33,7 @@ public static class Configuration
             },
 
             // where to redirect to after login 
-           
+            // todo get this from configuration
             RedirectUris = { $"https://localhost:7199/signin-oidc" },
 
             // where to redirect to after logout

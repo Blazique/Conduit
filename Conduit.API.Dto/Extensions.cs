@@ -19,10 +19,10 @@ public static class Extensions
     public static Comment ToComment(this CommentDto comment) =>
         new(comment.Id, comment.Body, comment.CreatedAt, comment.UpdatedAt, comment.Author.ToProfile());
 
-    public static ArticleFeed ToArticleFeed(this ArticleFeedDto articleFeed) =>
+    public static ArticleFeed ToArticleFeed(this ArticlesDto articleFeed) =>
         new(articleFeed.ArticlesCount, articleFeed.Articles.Select(ToArticle).ToList());
 
-    public static ArticleFeedDto ToArticleFeedDto(this ArticleFeed articleFeed) =>
+    public static ArticlesDto ToArticleFeedDto(this ArticleFeed articleFeed) =>
         new(articleFeed.ArticlesCount, articleFeed.Articles.Select(ToArticleDto).ToList());
 
     public static Profile ToProfile(this ProfileDto profile) =>

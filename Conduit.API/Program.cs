@@ -20,7 +20,6 @@ builder.AddServiceDefaults();
 builder.AddNpgsqlDataSource(ConduitDatabase.Name);
 
 var martenStoreOptions = new StoreOptions();
-martenStoreOptions.Connection(builder.Configuration[PostgresSettingsConfigurationKeys.PostgresSettings_ConnectionString]);
 martenStoreOptions.UseSystemTextJsonForSerialization();
 
 // If we're running in development mode, let Marten just take care
@@ -31,7 +30,9 @@ if (builder.Environment.IsDevelopment())
 }
 
 builder.Services
-    .AddMarten(martenStoreOptions).UseLightweightSessions()
+    .AddMarten(martenStoreOptions)
+    .UseLightweightSessions()
+    .UseNpgsqlDataSource()
     .InitializeWith(
         new InitialData(InitialDatasets.Profiles), 
         new InitialData(InitialDatasets.Articles));
@@ -68,8 +69,9 @@ app.MapDelete("/profiles/{username}/follow", async (IDocumentSession session, st
 app.MapGet("/articles/feed", async (IDocumentSession session, ClaimsPrincipal principal, int limit, int offset) =>
 {
     var query = session.Query<ArticleDso>().Where(a => a.Author.Username == principal.Identity.Name);
-    var articles = await query.Skip(offset).Take(limit).ToListAsync();
-    return Results.Ok(articles.Select(dso => dso.ToDto()));
+    var queriedArticles = await query.Skip(offset).Take(limit).ToListAsync();
+    var articles = new ArticlesDto(queriedArticles.Count, queriedArticles.Select(dso => dso.ToDto()).ToList());
+    return Results.Ok(articles);
 }).RequireAuthorization();
 
 // Get a list of articles with optional filtering by tag and author and pagination
@@ -78,10 +80,11 @@ app.MapGet("/articles", async (IDocumentSession session, string? tag, string? au
 
     var query = session
         .Query<ArticleDso>()
-        .Where(a => tag == null || a.TagList.Contains(tag))
-        .Where(a => author == null ||  a.Author.Username == author);
-    var articles = await query.Skip(offset).Take(limit).ToListAsync();
-    return Results.Ok(articles.Select(dso => dso.ToDto()));
+        .Where(a => string.IsNullOrEmpty(tag) || a.TagList.Contains(tag))
+        .Where(a => string.IsNullOrEmpty(author) ||  a.Author.Username == author);
+    var queriedArticles = await query.Skip(offset).Take(limit).ToListAsync();
+    var articles = new ArticlesDto(queriedArticles.Count, queriedArticles.Select(dso => dso.ToDto()).ToList());
+    return Results.Ok(articles);
 });
 
 // Get a single article by its slug

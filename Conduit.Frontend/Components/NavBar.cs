@@ -1,72 +1,47 @@
 
 using Conduit.Domain;
+using Microsoft.AspNetCore.Components.Authorization;
 using Microsoft.AspNetCore.Components.Routing;
 using Microsoft.AspNetCore.Components.Web;
 using Radix.Data;
+using System.Security.Claims;
 
 namespace Conduit.Components;
 
 [InteractiveServerRenderMode(Prerender = false)]
 public class NavBar : Blazique.Web.Component
 {
-    [Inject]
-    public MessageBus MessageBus { get; set; } = null!;
+    private ClaimsPrincipal? _user;
 
-    [Inject]
-    public GetUser GetUser { get; set; } = null!;
-
-    private User? _user;
-
-    private bool isUserDataRetrieved = false;
+    [CascadingParameter]
+    private Task<AuthenticationState>? AuthState { get; set; }
 
     public override Node[] Render()
     =>
     [
         // If the user is not logged in, then display the NavBarForUsersThatAreNotLoggedIn
-        _user switch
-        {
-            // If the user is logged in, then display the NavBarForLoggedInUsers
-            User user => NavBarForLoggedInUsers(user),
-            _ => NavBarForUsersThatAreNotLoggedIn()
-        }             
+        _user is not null && _user.Identity.IsAuthenticated
+        ? NavBarForLoggedInUsers(_user)
+        : NavBarForUsersThatAreNotLoggedIn()
+
     ];
 
     private IDisposable? _subscription;
 
-    protected override void OnInitialized()
+    protected override async Task OnInitializedAsync()
     {
-        _subscription = MessageBus.OfType<UserLoggedIn>().Subscribe(HandleMessage);
-    }
+        if (AuthState == null)
+        {
+            return;
+        }
 
-    private void HandleMessage(UserLoggedIn message)
-    {
-        _user = message.User;
-        StateHasChanged();
+        var authState = await AuthState;
+        _user = authState.User;
     }
 
     public void Dispose()
     {
         _subscription?.Dispose();
-    }
-
-    protected override async Task OnAfterRenderAsync(bool firstRender)
-    {
-        // If the user is not logged in and the user data has not been retrieved, then retrieve the user data
-        if(_user is null && !isUserDataRetrieved) 
-        {  
-            var userOption = await GetUser();
-            switch (userOption)
-            {
-                case Some<User>(var user):
-                    _user = user;
-                    break;
-                case None<User> _:
-                    _user = null;
-                    break;
-            }
-            isUserDataRetrieved = true;
-            StateHasChanged();
-        }        
     }
 
     private static Node NavBarForUsersThatAreNotLoggedIn()
@@ -91,8 +66,11 @@ public class NavBar : Blazique.Web.Component
             ]);;
     }
 
-    private static Node NavBarForLoggedInUsers(User user)
+    private static Node NavBarForLoggedInUsers(ClaimsPrincipal user)
     {
+        // Retrieve the "name" claim value
+        var nameClaimValue = user.Claims.Where(claim => claim.Type == "name").FirstOrDefault().Value ?? "Unknown";
+
         return nav([@class(["navbar", "navbar-light"])], [
                     div([@class(["container"])], [
                      a([@class(["navbar-brand"]), href(["/"])], [text("conduit")]),
@@ -113,7 +91,7 @@ public class NavBar : Blazique.Web.Component
                              ])
                          ]),
                         li([@class(["nav-item"])], [
-                            a([@class(["nav-link"]), href([$"/profile/{user.Username}"])], [text(user.Username)])
+                            a([@class(["nav-link"]), href([$"/profile/{nameClaimValue}"])], [text(nameClaimValue)])
                         ])
                      ])
                  ])

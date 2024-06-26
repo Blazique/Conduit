@@ -28,22 +28,22 @@ namespace Conduit.Components
         public GetComments GetComments { get; set; } = (_) => Task.FromResult(new List<Comment>());
 
         [Inject]
-        public AddComment AddComment { get; set; } = (_, _, _) => Task.FromResult(Error<Comment, string[]>(["Comment not added"]));
+        public AddComment AddComment { get; set; } = (_, _) => Task.FromResult(Error<Comment, string[]>(["Comment not added"]));
 
         [Inject]
-        public DeleteComment DeleteComment {get;set;} = (_, _, _) => Task.FromResult(Error<Unit, string[]>(["Comment not deleted"]));
+        public DeleteComment DeleteComment {get;set;} = (_, _) => Task.FromResult(Error<Unit, string[]>(["Comment not deleted"]));
 
         [Inject]
-        public MarkArticleAsFavorite MarkArticleAsFavorite { get; set; } = (_, _) => Task.CompletedTask;
+        public MarkArticleAsFavorite MarkArticleAsFavorite { get; set; } = (_) => Task.CompletedTask;
 
         [Inject]
-        public UnmarkArticleAsFavorite UnmarkArticleAsFavorite { get; set; } = (_, _) => Task.CompletedTask;
+        public UnmarkArticleAsFavorite UnmarkArticleAsFavorite { get; set; } = (_) => Task.CompletedTask;
 
         [Inject]
-        public FollowUser FollowUser { get; set; } = (_, _) => Task.FromResult(Error<Unit, string[]>(["User not followed"]));
+        public FollowUser FollowUser { get; set; } = (_) => Task.FromResult(Error<Unit, string[]>(["User not followed"]));
 
         [Inject]
-        public UnfollowUser UnfollowUser { get; set; } = (_, _) => Task.FromResult(Error<Unit, string[]>(["User not unfollowed"]));
+        public UnfollowUser UnfollowUser { get; set; } = (_) => Task.FromResult(Error<Unit, string[]>(["User not unfollowed"]));
 
         [Inject]
         public NavigationManager? Navigation { get; set; }
@@ -87,26 +87,26 @@ namespace Conduit.Components
                 case InvertMarkArticleAsFavoriteCommand _:
                     if(model.Article.Favorited)
                     {
-                        await UnmarkArticleAsFavorite(model.Article.Slug, model.User!.Token);
+                        await UnmarkArticleAsFavorite(model.Article.Slug);
                     }
                     else
                     {
-                        await MarkArticleAsFavorite(model.Article.Slug, model.User!.Token);
+                        await MarkArticleAsFavorite(model.Article.Slug);
                     }
                     
                     return model with {Article = model.Article with {Favorited = !model.Article.Favorited, FavoritesCount = model.Article.FavoritesCount + (model.Article.Favorited ? -1 : 1)}};
                 case FollowCommand _:
                     if(model.Article.Author.Following)
                     {
-                        await UnfollowUser(model.Article.Author.Username, model.User!.Token);
+                        await UnfollowUser(model.Article.Author.Username);
                     }
                     else
                     {
-                        await FollowUser(model.Article.Author.Username, model.User!.Token);
+                        await FollowUser(model.Article.Author.Username);
                     }
                     return model with {Article = model.Article with {Author = model.Article.Author with {Following = !model.Article.Author.Following}}};
                 case PostCommentCommand (var comment):
-                    var addCommentResult = await AddComment((Slug)model.Article.Slug, comment, model.User!.Token);
+                    var addCommentResult = await AddComment((Slug)model.Article.Slug, comment);
                     switch (addCommentResult)
                     {
                         case Ok<Comment, string[]> (var newComment):
@@ -118,7 +118,7 @@ namespace Conduit.Components
                 case SetNewComment(var value):
                     return model with {NewComment = value.ToString()};
                 case DeleteCommentCommand(var id):
-                    var deleteCommentResult = await DeleteComment((Slug)model.Article.Slug, id, model.User!.Token);
+                    var deleteCommentResult = await DeleteComment((Slug)model.Article.Slug, id);
                     switch(deleteCommentResult)
                     {
                         case Ok<Unit, string[]> _:
@@ -273,7 +273,7 @@ namespace Conduit.Components
     public interface ArticlePageCommand;
 
     
-    internal record DeleteCommentCommand(int Id) : ArticlePageCommand;
+    internal record DeleteCommentCommand(string Id) : ArticlePageCommand;
     internal record PostCommentCommand(string NewComment) : ArticlePageCommand;
 
     internal record SetNewComment(string Comment) : ArticlePageCommand;

@@ -11,8 +11,8 @@
 
   <ItemGroup>
     <PackageReference Include="Aspire.Npgsql" Version="8.0.1" />
-    <PackageReference Include="Duende.IdentityServer" Version="7.0.4" />
-    <PackageReference Include="Marten" Version="7.20.0" />
+    <PackageReference Include="Duende.IdentityServer" Version="7.0.5" />
+    <PackageReference Include="Marten" Version="7.20.1" />
     <!--<PackageReference Include="Microsoft.AspNetCore.OpenApi" Version="8.0.6" />-->
     <PackageReference Include="Microsoft.VisualStudio.Azure.Containers.Tools.Targets" Version="1.21.0-Preview.1" />
   </ItemGroup>
@@ -22,9 +22,5 @@
     <ProjectReference Include="..\Conduit.ServiceDefaults\Conduit.ServiceDefaults.csproj" />
     <ProjectReference Include="..\Conduit\Conduit.csproj" />
   </ItemGroup>
-
-    <Target Name="PostBuild" AfterTargets="Build">
-        <Exec Command="dotnet swagger tofile --output $(ProjectDir)../swagger.json $(OutputPath)$(AssemblyName).dll V1" EnvironmentVariables="DOTNET_ROLL_FORWARD=LatestMajor" />
-    </Target>
 
 </Project>

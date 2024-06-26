@@ -43,7 +43,7 @@ public delegate Task<List<Comment>> GetComments(Slug slug);
 
 public delegate Task<Result<Comment, string[]>> AddComment(Slug slug, string body);
 
-public delegate Task<Result<Unit, string[]>> DeleteComment(Slug slug, int commentId);
+public delegate Task<Result<Unit, string[]>> DeleteComment(Slug slug, string commentId);
 
 public delegate Task<Result<Unit, string[]>> FollowUser(string username);
 
