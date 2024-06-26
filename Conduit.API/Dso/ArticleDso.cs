@@ -14,7 +14,6 @@ public record ArticleDso
     public DateTimeOffset UpdatedAt { get; init; }
     public HashSet<string> FavoritedBy { get; init; }
     public bool Favorited => FavoritedBy.Count > 0;
-    public int FavoritesCount { get; init; }
     public required ProfileDso Author { get; init; }
 
     public required List<CommentDso> Comments { get; init; }

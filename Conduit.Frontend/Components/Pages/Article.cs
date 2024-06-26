@@ -301,7 +301,7 @@ namespace Conduit.Components
 
     public record ArticlePageModel
     {
-        public Domain.Article Article { get; init; } = new Domain.Article("", "", "", "", [], DateTimeOffset.Now, DateTimeOffset.Now, false, 0, new Domain.Profile("", "", "", false));
+        public Domain.Article Article { get; init; } = new Domain.Article("", "", "", "", [], DateTimeOffset.Now, DateTimeOffset.Now, new HashSet<string>(), false, 0, new Domain.Profile("", "", "", false));
         public List<Comment> Comments { get; internal set; } = [];
         public string[] Errors { get; internal set; } = [];
         public string NewComment { get; internal set; } = "";

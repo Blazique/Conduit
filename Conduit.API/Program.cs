@@ -1,17 +1,12 @@
 using Conduit;
 using JasperFx.Core;
 using Marten;
-using Marten.Linq;
 using Weasel.Core;
 
 using Conduit.API.Seed;
 using Conduit.API.Dso;
 using Conduit.API;
 using System.Security.Claims;
-using IdentityModel.Client;
-using Duende.IdentityServer.Models;
-using Microsoft.AspNetCore.Http;
-using Duende.IdentityServer.Extensions;
 
 static string ToSlug(string title) => title.ToLower().Replace(" ", "-");
 
@@ -85,8 +80,8 @@ app.MapGet("/articles/feed", async (IDocumentSession session, ClaimsPrincipal pr
 {
     var nameIdentifier = principal.Claims.FindFirst(claim => claim.Type == ClaimTypes.NameIdentifier).Value;
     var query = session.Query<ArticleDso>().Where(a => a.Author.Id == nameIdentifier);
-    var queriedArticles = await query.Skip(offset).Take(limit).ToListAsync();
-    var articles = new ArticlesDto(queriedArticles.Count, queriedArticles.Select(dso => dso.ToDto()).ToList());
+    var queriedArticles = await query.ToListAsync();
+    var articles = new ArticlesDto(queriedArticles.Count, queriedArticles.Skip(offset).Take(limit).Select(dso => dso.ToDto()).ToList());
     return Results.Ok(articles);
 }).RequireAuthorization();
 
@@ -97,9 +92,10 @@ app.MapGet("/articles", async (IDocumentSession session, string? tag, string? au
     var query = session
         .Query<ArticleDso>()
         .Where(a => string.IsNullOrEmpty(tag) || a.TagList.Contains(tag))
-        .Where(a => string.IsNullOrEmpty(author) ||  a.Author.Username == author);
-    var queriedArticles = await query.Skip(offset).Take(limit).ToListAsync();
-    var articles = new ArticlesDto(queriedArticles.Count, queriedArticles.Select(dso => dso.ToDto()).ToList());
+        .Where(a => string.IsNullOrEmpty(author) ||  a.Author.Username == author)
+        .OrderBy(a => a.CreatedAt);
+    var queriedArticles = await query.ToListAsync();
+    var articles = new ArticlesDto(queriedArticles.Count, queriedArticles.Skip(offset).Take(limit).Select(dso => dso.ToDto()).ToList());
     return Results.Ok(articles);
 });
 
@@ -125,7 +121,6 @@ app.MapPost("/articles", async (IDocumentSession session, ClaimsPrincipal princi
         CreatedAt = DateTimeOffset.UtcNow,
         UpdatedAt = DateTimeOffset.UtcNow,
         FavoritedBy = new HashSet<string>(),
-        FavoritesCount = 0,
         Comments = new List<CommentDso>()
     };
     session.Store(article);
@@ -170,6 +165,7 @@ app.MapPost("/articles/{slug}/comments", async (IDocumentSession session, string
     if (article is null) return Results.NotFound();
     var comment = commentDto.ToDso();
     article.Comments.Add(comment);
+    session.Store(article with { UpdatedAt = DateTimeOffset.UtcNow });
     await session.SaveChangesAsync();
     return Results.Created($"/articles/{slug}/comments/{comment.Id}", comment.ToDto());
 }).RequireAuthorization();
@@ -182,6 +178,7 @@ app.MapDelete("/articles/{slug}/comments/{commentId}", async (IDocumentSession s
     var comment = article.Comments.FirstOrDefault(c => c.Id == commentId);
     if (comment is null) return Results.NotFound();
     article.Comments.Remove(comment);
+    session.Store(article);
     await session.SaveChangesAsync();
     return Results.NoContent();
 }).RequireAuthorization();
@@ -200,22 +197,30 @@ app.MapPost("/articles/{slug}/favorite", async (IDocumentSession session, Claims
     // todo: check if the user is allowed to
     var article = await session.LoadAsync<ArticleDso>(slug);
     if (article is null) return Results.NotFound();
-    article.FavoritedBy.Add(principal.Identity.Name);
-    article = article with {  FavoritesCount = article.FavoritesCount + 1};
-    await session.SaveChangesAsync();
+    var nameIdentifier = principal.Claims.FindFirst(claim => claim.Type == ClaimTypes.NameIdentifier).Value;
+    if (article.FavoritedBy.Add(nameIdentifier))
+    {
+        article = article with { UpdatedAt = DateTimeOffset.UtcNow };
+        session.Store(article);
+        await session.SaveChangesAsync();
+    }
     return Results.Ok(article.ToDto());
 }).RequireAuthorization();
 
 // Unfavorite an article
 app.MapDelete("/articles/{slug}/favorite", async (IDocumentSession session, ClaimsPrincipal principal, string slug) =>
 {
-    // todo: check if the user is allowed to
-    var article = await session.LoadAsync<ArticleDso>(slug);
-    if (article is null) return Results.NotFound();
-    article.FavoritedBy.Remove(principal.Identity.Name);
-    article = article with { FavoritesCount = article.FavoritesCount - 1 };
+// todo: check if the user is allowed to
+var article = await session.LoadAsync<ArticleDso>(slug);
+if (article is null) return Results.NotFound();
+var nameIdentifier = principal.Claims.FindFirst(claim => claim.Type == ClaimTypes.NameIdentifier).Value;
+if (article.FavoritedBy.Remove(nameIdentifier))
+{
+    article = article with { UpdatedAt = DateTimeOffset.UtcNow };
+    session.Store(article);
     await session.SaveChangesAsync();
-    return Results.Ok(article.ToDto());
+}
+return Results.Ok(article.ToDto());
 }).RequireAuthorization();
 
 app.MapGet("/tags", async (IDocumentSession session) =>

@@ -17,7 +17,7 @@ public record Profile(string Username, string Bio, string Image, bool Following)
 
 public record ArticleFeed(int ArticlesCount, List<Article> Articles);
 
-public record Article(string Slug, string Title, string Description, string Body, List<string> TagList, DateTimeOffset CreatedAt, DateTimeOffset UpdatedAt, bool Favorited, int FavoritesCount, Profile Author);
+public record Article(string Slug, string Title, string Description, string Body, List<string> TagList, DateTimeOffset CreatedAt, DateTimeOffset UpdatedAt, HashSet<string> FavoritedBy,  bool Favorited, int FavoritesCount, Profile Author);
 
 public record UserLoggedIn(User User);
 

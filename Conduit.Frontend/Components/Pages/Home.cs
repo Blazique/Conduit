@@ -53,15 +53,15 @@ public class Home : Component<HomePageModel, HomePageCommand>
 
         if(_user is not null && _user.Identity.IsAuthenticated)
         {
+            model.SelectedFeed = SelectedFeed.YourFeed;
             model.Feed = await GetArticlesFeed(model.PageSize, (model.Page - 1) * model.PageSize);
-            model.TotalPages = (model.Feed.ArticlesCount + model.PageSize - 1) / model.PageSize;
         }
         else
         {
             model.Feed = await GetAllRecentArticles(model.PageSize, 0);
-            model.TotalPages = (model.Feed.ArticlesCount + model.PageSize - 1) / model.PageSize;
+            
         }
-
+        model.TotalPages = (model.Feed.ArticlesCount + model.PageSize - 1) / model.PageSize;
         return model;
     }
 
@@ -87,16 +87,20 @@ public class Home : Component<HomePageModel, HomePageCommand>
                 model.TotalPages = model.Feed is not null ? (model.Feed.ArticlesCount + model.PageSize - 1) / model.PageSize : 0;
                 break;
             case InvertMarkArticleAsFavorite invertMarkArticleAsFavorite:
-                if(invertMarkArticleAsFavorite.Article.Favorited)
+                if(_user.Identity.IsAuthenticated)
                 {
-                    await UnmarkArticleAsFavorite(invertMarkArticleAsFavorite.Article.Slug);
-                }
-                else
-                {
-                    await MarkArticleAsFavorite(invertMarkArticleAsFavorite.Article.Slug);
-                }
+                    string userIdentityValue = _user.Claims.FirstOrDefault(claim => claim.Type == "sub").Value;
+                    if (invertMarkArticleAsFavorite.Article.FavoritedBy.Contains(userIdentityValue))
+                    {
+                        await UnmarkArticleAsFavorite(invertMarkArticleAsFavorite.Article.Slug);
+                    }
+                    else
+                    {
+                        await MarkArticleAsFavorite(invertMarkArticleAsFavorite.Article.Slug);
+                    }
                     
-                await RefreshFeed(model);
+                    await RefreshFeed(model);
+                }
                 break;
         }
         return model;
