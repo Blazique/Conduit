@@ -44,10 +44,10 @@ namespace Conduit.Components
         public UnmarkArticleAsFavorite UnmarkArticleAsFavorite { get; set; } = (_) => Task.CompletedTask;
 
         [Inject]
-        public FollowUser FollowUser { get; set; } = (_) => Task.FromResult(Error<Unit, string[]>(["User not followed"]));
+        public FollowUser FollowUser { get; set; } = (_) => Task.FromResult(Error<Domain.Profile, string[]>(["User not followed"]));
 
         [Inject]
-        public UnfollowUser UnfollowUser { get; set; } = (_) => Task.FromResult(Error<Unit, string[]>(["User not unfollowed"]));
+        public UnfollowUser UnfollowUser { get; set; } = (_) => Task.FromResult(Error<Domain.Profile, string[]>(["User not unfollowed"]));
 
         [Inject]
         public NavigationManager? Navigation { get; set; }
@@ -57,6 +57,8 @@ namespace Conduit.Components
         [CascadingParameter]
         private Task<AuthenticationState>? AuthState { get; set; }
 
+        private ClaimsPrincipal? _user;
+
         protected override async Task<ArticlePageModel> Initialize(ArticlePageModel model)
         {
             if (AuthState == null)
@@ -65,6 +67,8 @@ namespace Conduit.Components
             }
 
             AuthenticationState authState = await AuthState;
+            _user = authState.User;
+            
 
             var article = await GetArticle((Slug)Slug);
             
@@ -73,12 +77,14 @@ namespace Conduit.Components
                 case Ok<Domain.Article, string[]>(var a):
                     var comments = new List<Comment>();
                     var profile = None<Domain.Profile>();
-                    if (authState.User.Identity.IsAuthenticated)
+                    if (_user.Identity.IsAuthenticated)
                     {
-                        var userName = authState.User.Claims.Where(claim => claim.Type == "name").FirstOrDefault()?.Value;
-                        profile = await GetProfile(a.Author.Username);
-                        comments = await GetComments((Slug)a.Slug);
+                        model = model with { CurrentUserName = authState.User.Claims.Where(claim => claim.Type == "given_name").FirstOrDefault()?.Value, CurrentUserId = authState.User.Claims.Where(claim => claim.Type == "sub").FirstOrDefault()?.Value };
+                        
                     }
+                    profile = await GetProfile(a.Author.Username);
+                    comments = await GetComments((Slug)a.Slug);
+
                     return profile switch
                     {
                         Some<Domain.Profile>(var p) => model with { Article = a, Comments = comments, Profile = p },
@@ -113,15 +119,22 @@ namespace Conduit.Components
                     
                     return model with {Article = model.Article with {Favorited = !model.Article.Favorited, FavoritesCount = model.Article.FavoritesCount + (model.Article.Favorited ? -1 : 1)}};
                 case FollowCommand _:
-                    if(model.Article.Author.Following)
+                    Result<Domain.Profile, string[]> profile;
+                    if (model.Article.Author.FollowedBy.Contains(model.CurrentUserId))
                     {
-                        await UnfollowUser(model.Article.Author.Username);
+                        profile = await UnfollowUser(model.Article.Author.Username);
+                        
                     }
                     else
                     {
-                        await FollowUser(model.Article.Author.Username);
+                        profile = await FollowUser(model.Article.Author.Username);
                     }
-                    return model with {Article = model.Article with {Author = model.Article.Author with {Following = !model.Article.Author.Following}}};
+                    return profile switch
+                    {
+                        Ok<Domain.Profile, string[]>(var p) => model with { Article = model.Article with { Author = p } },
+                        Error<Domain.Profile, string[]>(var errors) => model with { Errors = errors }
+                    };
+                    
                 case PostCommentCommand (var comment):
                     var addCommentResult = await AddComment((Slug)model.Article.Slug, comment);
                     switch (addCommentResult)
@@ -175,7 +188,7 @@ namespace Conduit.Components
                 div([@class(["article-actions"])], [
                     div([@class(["article-meta"])], 
                         ArticleMeta(model, dispatch)),
-                        model.Profile is not null
+                        model.Profile is not null && _user.Identity.IsAuthenticated
                         ?
                             div([@class(["row"])], [
                                 div([@class(["col-xs-12", "col-md-8", "offset-md-2"])], [
@@ -253,16 +266,16 @@ namespace Conduit.Components
             ];
 
         private static bool CurrentUserIsArticleAuthor(ArticlePageModel model) =>
-            model.Profile is not null && model.Profile.Username == model.Article.Author.Username;
+            model.CurrentUserName == model.Article.Author.Username;
 
         private static bool CurrentUserIsCommentAuthor(ArticlePageModel model, Comment comment) =>
-            model.Profile is not null && comment.Author.Username == model.Profile.Username;
+            comment.Author.Username == model.Profile.Username;
 
         private static Node[] ShowFollowAndFavoriteButtons(ArticlePageModel model, Func<ArticlePageCommand, Task> dispatch)
         => [
                 button([@class(["btn", "btn-sm", "btn-outline-secondary", "action-btn"]), type(["button"]), on.click(_ => dispatch(new FollowCommand()))], [
                     i([@class(["ion-plus-round"])], []),
-                    text(model.Article.Author.Following ? " Unfollow" : " Follow" + $" {model.Article.Author.Username}")
+                    text(model.Article.Author.FollowedBy.Contains(model.CurrentUserId) ? " Unfollow" : " Follow" + $" {model.Article.Author.Username}")
                 ]),
                 text(" "),
                 text(" "),
@@ -301,12 +314,13 @@ namespace Conduit.Components
 
     public record ArticlePageModel
     {
-        public Domain.Article Article { get; init; } = new Domain.Article("", "", "", "", [], DateTimeOffset.Now, DateTimeOffset.Now, new HashSet<string>(), false, 0, new Domain.Profile("", "", "", false));
+        public Domain.Article Article { get; init; } = new Domain.Article("", "", "", "", [], DateTimeOffset.Now, DateTimeOffset.Now, new HashSet<string>(), false, 0, new Domain.Profile("", "", "", new HashSet<string>()));
         public List<Comment> Comments { get; internal set; } = [];
         public string[] Errors { get; internal set; } = [];
         public string NewComment { get; internal set; } = "";
         public Domain.Profile? Profile {get;  init;}
-
+        public string? CurrentUserName { get; internal set; }
+        public string? CurrentUserId { get; internal set; }
     }
 
 }

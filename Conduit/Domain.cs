@@ -10,7 +10,7 @@ public partial record Slug;
 public record Comment(string Id, string Body, DateTimeOffset CreatedAt, DateTimeOffset UpdatedAt, Profile Author);
 public record User(int Id, string Email, string Token, string Username, string Bio, string Image);
 
-public record Profile(string Username, string Bio, string Image, bool Following)
+public record Profile(string Username, string Bio, string Image, HashSet<string> FollowedBy)
 {
     public string Id { get; set; }
 }
@@ -48,7 +48,7 @@ public delegate Task<Result<Comment, string[]>> AddComment(Slug slug, string bod
 
 public delegate Task<Result<Unit, string[]>> DeleteComment(Slug slug, string commentId);
 
-public delegate Task<Result<Unit, string[]>> FollowUser(string username);
+public delegate Task<Result<Profile, string[]>> FollowUser(string username);
 
-public delegate Task<Result<Unit, string[]>> UnfollowUser(string username);
+public delegate Task<Result<Profile, string[]>> UnfollowUser(string username);
 

@@ -72,7 +72,7 @@ public class Client
 
     public async Task<CommentDto> AddCommentAsync(string slug, string body)
     {
-        var response = await _httpClient.PostAsJsonAsync($"/articles/{slug}/comments", new { comment = new { body } });
+        var response = await _httpClient.PostAsJsonAsync($"/articles/{slug}/comments", new CommentDto(body));
         response.EnsureSuccessStatusCode();
         return await response.Content.ReadFromJsonAsync<CommentDto>();
     }

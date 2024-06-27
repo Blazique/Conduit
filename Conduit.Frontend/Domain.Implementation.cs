@@ -83,17 +83,16 @@ public static class Implementation
 
     public static Func<Client, FollowUser> followUser = (Client client) => async (string username) =>
     {
-
-        await client.FollowUserAsync(username);
-        return Ok<Unit, string[]>(new ());
+        var result = await client.FollowUserAsync(username);
+        return Ok<Profile, string[]>(result.ToProfile());
 
     };
 
     public static Func<Client, UnfollowUser> unfollowUser = (Client client) => async (string username) =>
     {
 
-        await client.UnfollowUserAsync(username);
-        return Ok<Unit, string[]>(new ());
-        
+        var result = await client.UnfollowUserAsync(username);
+        return Ok<Profile, string[]>(result.ToProfile());
+
     };
 }

@@ -7,6 +7,9 @@ using Conduit.API.Seed;
 using Conduit.API.Dso;
 using Conduit.API;
 using System.Security.Claims;
+using IdentityModel;
+using YamlDotNet.Core.Tokens;
+using System.Security.Cryptography;
 
 static string ToSlug(string title) => title.ToLower().Replace(" ", "-");
 
@@ -57,21 +60,25 @@ app.MapGet("/profiles/{username}", (IDocumentSession session, string username) =
 });
 
 // Follow a user
-app.MapPost("/profiles/{username}/follow", async (IDocumentSession session, string username) =>
+app.MapPost("/profiles/{username}/follow", async (IDocumentSession session, ClaimsPrincipal principal, string username) =>
 {
+    var nameIdentifier = principal.Claims.FindFirst(claim => claim.Type == ClaimTypes.NameIdentifier).Value;
     var profile = session.Load<ProfileDso>(username);
     if (profile is null) return Results.NotFound();
-    session.Store(profile with { Following = true });
+    profile.FollowedBy.Add(nameIdentifier);
+    session.Store(profile);
     await session.SaveChangesAsync();
     return Results.Ok(profile);
 }).RequireAuthorization();
 
 // Unfollow a user
-app.MapDelete("/profiles/{username}/follow", async (IDocumentSession session, string username) =>
+app.MapDelete("/profiles/{username}/follow", async (IDocumentSession session, ClaimsPrincipal principal, string username) =>
 {
+    var nameIdentifier = principal.Claims.FindFirst(claim => claim.Type == ClaimTypes.NameIdentifier).Value;
     var profile = session.Load<ProfileDso>(username);
     if (profile is null) return Results.NotFound();
-    session.Store(profile with { Following = false });
+    profile.FollowedBy.Remove(nameIdentifier);
+    session.Store(profile);
     await session.SaveChangesAsync();
     return Results.Ok(profile);
 }).RequireAuthorization();
@@ -79,23 +86,36 @@ app.MapDelete("/profiles/{username}/follow", async (IDocumentSession session, st
 app.MapGet("/articles/feed", async (IDocumentSession session, ClaimsPrincipal principal, int limit, int offset) =>
 {
     var nameIdentifier = principal.Claims.FindFirst(claim => claim.Type == ClaimTypes.NameIdentifier).Value;
-    var query = session.Query<ArticleDso>().Where(a => a.Author.Id == nameIdentifier);
+    var query = session.Query<ArticleDso>().Where(a => a.AuthorId == nameIdentifier);
     var queriedArticles = await query.ToListAsync();
-    var articles = new ArticlesDto(queriedArticles.Count, queriedArticles.Skip(offset).Take(limit).Select(dso => dso.ToDto()).ToList());
+    var articlesDtos = await Task.WhenAll(queriedArticles.Skip(offset).Take(limit)
+        .Select(async dso =>
+        {
+            var profile = await session.Query<ProfileDso>().FirstOrDefaultAsync(p => p.Id == dso.AuthorId);
+            return dso.ToDto() with { Author = profile.ToDto() };
+        }));
+    var articles = new ArticlesDto(queriedArticles.Count, articlesDtos.ToList());
     return Results.Ok(articles);
 }).RequireAuthorization();
 
 // Get a list of articles with optional filtering by tag and author and pagination
 app.MapGet("/articles", async (IDocumentSession session, string? tag, string? author, int limit, int offset) =>
 {
-
+    var authorProfile = !string.IsNullOrEmpty(author) ? session.Query<ProfileDso>().FirstOrDefault(p => p.Username == author) : null;
+    var authorProfileId = authorProfile?.Id;
     var query = session
         .Query<ArticleDso>()
         .Where(a => string.IsNullOrEmpty(tag) || a.TagList.Contains(tag))
-        .Where(a => string.IsNullOrEmpty(author) ||  a.Author.Username == author)
+        .Where(a => string.IsNullOrEmpty(author) || a.AuthorId == authorProfileId)
         .OrderBy(a => a.CreatedAt);
     var queriedArticles = await query.ToListAsync();
-    var articles = new ArticlesDto(queriedArticles.Count, queriedArticles.Skip(offset).Take(limit).Select(dso => dso.ToDto()).ToList());
+    var articlesDtos = await Task.WhenAll(queriedArticles.Skip(offset).Take(limit)
+        .Select(async dso =>
+        {
+            var profile = await session.Query<ProfileDso>().FirstOrDefaultAsync(p => p.Id == dso.AuthorId);
+            return dso.ToDto() with { Author = profile.ToDto() };
+        }));
+    var articles = new ArticlesDto(queriedArticles.Count, articlesDtos.ToList());
     return Results.Ok(articles);
 });
 
@@ -103,16 +123,18 @@ app.MapGet("/articles", async (IDocumentSession session, string? tag, string? au
 app.MapGet("/articles/{slug}", async (IDocumentSession session, string slug) =>
 {
     var article = await session.LoadAsync<ArticleDso>(slug);
+    var profile = await session.Query<ProfileDso>().FirstOrDefaultAsync(p => p.Id == article.AuthorId);
     if (article is null) return Results.NotFound();
-    return Results.Ok(article.ToDto());
+    return Results.Ok(article.ToDto() with { Author = profile.ToDto()});
 });
 
 // Create a new article
 app.MapPost("/articles", async (IDocumentSession session, ClaimsPrincipal principal, CreateArticleDto createArticleDto) =>
 {
+    var nameIdentifier = principal.Claims.FindFirst(claim => claim.Type == ClaimTypes.NameIdentifier).Value;
     var article = new ArticleDso
     {
-        Author = await session.LoadAsync<ProfileDso>(principal.Identity.Name),
+        AuthorId = nameIdentifier,
         Slug = ToSlug(createArticleDto.Title),
         Title = createArticleDto.Title,
         Description = createArticleDto.Description,
@@ -123,9 +145,10 @@ app.MapPost("/articles", async (IDocumentSession session, ClaimsPrincipal princi
         FavoritedBy = new HashSet<string>(),
         Comments = new List<CommentDso>()
     };
+    var profile = await session.Query<ProfileDso>().FirstOrDefaultAsync(p => p.Id == nameIdentifier);
     session.Store(article);
     await session.SaveChangesAsync();
-    return Results.Created($"/articles/{article.Slug}", article.ToDto());
+    return Results.Created($"/articles/{article.Slug}", article.ToDto() with { Author = profile.ToDto() });
 }).RequireAuthorization();
 
 // Update an article
@@ -159,11 +182,15 @@ app.MapDelete("/articles/{slug}", async (IDocumentSession session, string slug) 
 }).RequireAuthorization();
 
 // Add a comment to an article
-app.MapPost("/articles/{slug}/comments", async (IDocumentSession session, string slug, CommentDto commentDto) =>
+app.MapPost("/articles/{slug}/comments", async (IDocumentSession session, ClaimsPrincipal principal, string slug, CommentDto commentDto) =>
 {
+    var nameIdentifier = principal.Claims.FindFirst(claim => claim.Type == ClaimTypes.NameIdentifier).Value;
+    var profile = await session.Query<ProfileDso>().FirstOrDefaultAsync(p => p.Id == nameIdentifier);
     var article = await session.LoadAsync<ArticleDso>(slug);
     if (article is null) return Results.NotFound();
+    commentDto = commentDto with { Author = profile.ToDto() };
     var comment = commentDto.ToDso();
+    comment = comment with { Id = Guid.NewGuid().ToString(), UpdatedAt = DateTimeOffset.UtcNow, CreatedAt = DateTimeOffset.Now };
     article.Comments.Add(comment);
     session.Store(article with { UpdatedAt = DateTimeOffset.UtcNow });
     await session.SaveChangesAsync();
@@ -189,7 +216,7 @@ app.MapGet("/articles/{slug}/comments", async (IDocumentSession session, string 
     var article = await session.LoadAsync<ArticleDso>(slug);
     if (article is null) return Results.NotFound();
     return Results.Ok(article.Comments.Select(c => c.ToDto()));
-}).RequireAuthorization();
+});
 
 // Favorite an article
 app.MapPost("/articles/{slug}/favorite", async (IDocumentSession session, ClaimsPrincipal principal, string slug) =>
