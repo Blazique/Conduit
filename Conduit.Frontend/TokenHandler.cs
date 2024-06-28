@@ -3,6 +3,9 @@ using Microsoft.AspNetCore.Authentication;
 
 namespace Conduit.Frontend;
 
+/// <summary>
+/// Adds the access token to the Authorization header of the request.
+/// </summary>
 public class TokenHandler : DelegatingHandler
 {
     private readonly IHttpContextAccessor _httpContextAccessor;

@@ -26,8 +26,8 @@ builder.Services.AddHttpClient<Client>(Backend.Name, client =>
     client.BaseAddress = new Uri($"https://{Backend.Name}");
     client.DefaultRequestHeaders.Add("Accept", "application/json");
 })
-    // Add the token handler to the client. This will ensure that the access token is added to the request headers.
-    .AddHttpMessageHandler<TokenHandler>();
+// Add the token handler to the client. This will ensure that the access token is added to the request headers.
+.AddHttpMessageHandler<TokenHandler>();
 
 var authorityDirect = builder.Configuration[IdentityServerSettingsConfigurationKeys.IdentityServerSettings_Authority];
 

@@ -9,12 +9,6 @@ namespace Conduit.Domain;
 
 public static class Implementation
 {
-    public static Func<ProtectedSessionStorage, GetUser> getUser = (ProtectedSessionStorage sessionStorage) => async () =>
-    {
-        var user = await sessionStorage.GetAsync<Conduit.Domain.User>(LocalStorageKey.User);
-        return user.Value is not null ? Some(user.Value) : None<Conduit.Domain.User>();
-    };
-
     public static Func<Client, GetProfile> getProfile =  (Client client) => async (string username) =>
     {
         var response = await client.GetProfileByUsernameAsync(username);

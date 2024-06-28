@@ -7,9 +7,6 @@ using Conduit.API.Seed;
 using Conduit.API.Dso;
 using Conduit.API;
 using System.Security.Claims;
-using IdentityModel;
-using YamlDotNet.Core.Tokens;
-using System.Security.Cryptography;
 
 static string ToSlug(string title) => title.ToLower().Replace(" ", "-");
 
@@ -18,8 +15,15 @@ var builder = WebApplication.CreateBuilder(args);
 builder.Services.Configure<IdentityServerSettings>(builder.Configuration.GetSection(nameof(IdentityServerSettings)));
 builder.Services.Configure<PostgresSettings>(builder.Configuration.GetSection(nameof(PostgresSettings)));
 
+// ****************************************************************
+
+// Configures Aspire defaults, service discovery, telemetry etc...
 builder.AddServiceDefaults();
+
+// Sets up the Aspire PostgreSQL component
 builder.AddNpgsqlDataSource(ConduitDatabase.Name);
+
+// ****************************************************************
 
 var martenStoreOptions = new StoreOptions();
 martenStoreOptions.UseSystemTextJsonForSerialization();
