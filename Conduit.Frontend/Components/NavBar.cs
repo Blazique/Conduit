@@ -70,6 +70,7 @@ public class NavBar : Blazique.Web.Component
     {
         // Retrieve the "name" claim value
         var nameClaimValue = user.Claims.Where(claim => claim.Type == "name").FirstOrDefault().Value ?? "Unknown";
+        var userNameClaimValue = user.Claims.Where(claim => claim.Type == "given_name").FirstOrDefault().Value ?? "Unknown";
 
         return nav([@class(["navbar", "navbar-light"])], [
                     div([@class(["container"])], [
@@ -91,7 +92,7 @@ public class NavBar : Blazique.Web.Component
                              ])
                          ]),
                         li([@class(["nav-item"])], [
-                            a([@class(["nav-link"]), href([$"/profile/{nameClaimValue}"])], [text(nameClaimValue)])
+                            a([@class(["nav-link"]), href([$"/profile/{userNameClaimValue}"])], [text(nameClaimValue)])
                         ])
                      ])
                  ])

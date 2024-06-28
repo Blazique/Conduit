@@ -17,9 +17,9 @@ public static class Implementation
             : None<Profile>();
     };
 
-    public static Func<Client, GetAllRecentArticles> getAllRecentArticles =  (Client client) => async (int? limit, int? offset, string? tag = null) =>
+    public static Func<Client, ListArticles> listArticles = (Client client) => async (int? limit, int? offset, string? tag, string? author, string? favorited) =>
     {
-        var response = await client.GetArticlesAsync(tag, null, null, limit, offset);
+        var response = await client.GetArticlesAsync(tag, author, favorited, limit, offset);
         return new ArticleFeed(response.ArticlesCount, response.Articles.Select(article => article.ToArticle()).ToList());
     };
 

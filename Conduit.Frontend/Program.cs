@@ -76,7 +76,7 @@ builder.Services.AddTransient(serviceProvider =>
 builder.Services.AddTransient(serviceProvider =>
 {
     var apiClient = serviceProvider.GetRequiredService<Client>();
-    return getAllRecentArticles(apiClient);
+    return listArticles(apiClient);
 });
 builder.Services.AddTransient(serviceProvider =>
 {

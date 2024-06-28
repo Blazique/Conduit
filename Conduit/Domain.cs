@@ -32,7 +32,7 @@ public delegate Task<Option<Profile>> GetProfile(string username);
 
 public delegate Task<ArticleFeed> GetArticlesFeed(int? limit, int? offset);
 
-public delegate Task<ArticleFeed> GetAllRecentArticles(int? limit, int? offset, string? tag = null);
+public delegate Task<ArticleFeed> ListArticles(int? limit, int? offset, string? tag = null, string? author = null, string? favorited = null);
 
 public delegate Task<string[]> GetTags();
 

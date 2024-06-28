@@ -1,8 +1,10 @@
 
 
 using Conduit.Domain;
-
+using k8s.KubeConfigModels;
+using Microsoft.AspNetCore.Components.Authorization;
 using Radix.Data;
+using System.Security.Claims;
 using static Radix.Control.Option.Extensions;
 
 namespace Conduit.Components;
@@ -11,23 +13,39 @@ namespace Conduit.Components;
 [InteractiveServerRenderMode(Prerender = false)]
 public class Profile : Component<ProfilePageModel, ProfilePageCommand>
 {
+    private ClaimsPrincipal? _user;
+
+    [CascadingParameter]
+    private Task<AuthenticationState>? AuthState { get; set; }
+
     [Inject]
     public GetProfile GetProfile { get; set; } = (_) => Task.FromResult(None<Domain.Profile>());
 
     [Inject]
-    public GetUser GetUser { get; set; } = () => Task.FromResult(None<Domain.User>());
-
-    [Inject]
-    public GetArticlesFeed GetArticlesFeed { get; set; } = (_, _) => Task.FromResult(new ArticleFeed(0,[]));
+    public ListArticles ListArticles { get; set; } = (_, _, _, _, _) => Task.FromResult(new ArticleFeed(0,[]));
 
     [Inject]
     public NavigationManager? Navigation { get; set; }
+
+    [Inject]
+    public MarkArticleAsFavorite MarkArticleAsFavorite { get; set; } = (_) => Task.CompletedTask;
+
+    [Inject]
+    public UnmarkArticleAsFavorite UnmarkArticleAsFavorite { get; set; } = (_) => Task.CompletedTask;
 
     [Parameter]
     public string Username { get; set; } = "";
 
     protected override async Task<ProfilePageModel> Initialize(ProfilePageModel model)
     {
+        if (AuthState == null)
+        {
+            return model;
+        }
+
+        AuthenticationState authState = await AuthState;
+        _user = authState.User;
+
         model.PageSize = 10;
         model.Page = 1;
         switch (await GetProfile(Username))
@@ -38,17 +56,7 @@ public class Profile : Component<ProfilePageModel, ProfilePageCommand>
             case None<Domain.Profile>:
                 break;
         }
-        switch (await GetUser())
-        {
-            case Some<Domain.User>(var user):
-                model.User = user;
-                model.Feed = await GetArticlesFeed( model.PageSize, 0);
-                model.TotalPages = (model.Feed.ArticlesCount +  model.PageSize - 1) /  model.PageSize;
-                break;
-            case None<Domain.User>:
-                break;
-        }
-
+        model.Feed = await ListArticles(Model.PageSize, (Model.Page - 1) * Model.PageSize, "", Model.Profile.Username, "");
         return model;
     }
 
@@ -77,10 +85,10 @@ public class Profile : Component<ProfilePageModel, ProfilePageCommand>
                             div([@class(["articles-toggle"])], [
                                 ul([@class(["nav", "nav-pills", "outline-active"])], [
                                     li([@class(["nav-item"])], [
-                                        a([@class(["nav-link", "active"]), href([""])], [text("My Articles")])
+                                        a([@class(["nav-link", model.SelectedFeed == SelectedProfileFeed.MyFeed ? "active" : ""]), on.click(_ => dispatch(new SetProfileFeed(SelectedProfileFeed.MyFeed)))], [text("My Articles")])
                                     ]),
                                     li([@class(["nav-item"])], [
-                                        a([@class(["nav-link"]), href([""])], [text("Favorited Articles")])
+                                        a([@class(["nav-link", model.SelectedFeed == SelectedProfileFeed.FavoritedFeed ? "active" : ""]), on.click(_ => dispatch(new SetProfileFeed(SelectedProfileFeed.FavoritedFeed)))], [text("Favorited Articles")])
                                     ])
                                 ])
                             ]),
@@ -92,20 +100,21 @@ public class Profile : Component<ProfilePageModel, ProfilePageCommand>
                                                 img([src([article.Author.Image])], [])]),
                                             div([@class(["info"])], [
                                                 a([@class(["author"]), href([$"/profile/{article.Author.Username}"])], [
-                                                    text(article.Author.Username)]),],
-                                                span([@class(["date"])], [text("January 20th")])),
-                                            button([@class(["btn", "btn-outline-primary", "btn-sm", "pull-xs-right"])], [
+                                                    text(article.Author.Username)]),
+                                                span([@class(["date"])], [text(article.CreatedAt.FormatWithOrdinal())])]),
+                                            button([@class(["btn", "btn-outline-primary", "btn-sm", "pull-xs-right"]), on.click(_ => dispatch(new InvertMarkArticleAsFavorite(article)))], [
                                                 i([@class(["ion-heart"])], []),
+                                                text($" {article.FavoritesCount}")])
                                         ]),
                                         a([href([$"/article/{article.Slug}"]), @class(["preview-link"])], [
                                             h1([], [text(article.Title)]),
                                             p([], [text(article.Description)]),
                                             span([], [text("Read more...")]),
                                             ul([@class(["tag-list"])], article.TagList.Select(tag =>
-                                                li([@class(["tag-pill", "tag-default"])], [text(tag)])).ToArray()),
+                                                li([@class(["tag-pill", "tag-default", "tag-outline"])], [text(tag)])).ToArray()),
                                                 
                                         ])
-                                    ])])).ToArray()
+                                    ])).ToArray()
                                 : [div([@class(["spinner-border"]), role(["status"])], [
                                         span([@class(["sr-only"])], [text("Loading...")])
                                     ])],
@@ -129,8 +138,42 @@ public class Profile : Component<ProfilePageModel, ProfilePageCommand>
             {
                 case ChangeProfileFeedPage(var page):
                     model.Page = page;
-                    model.Feed = Model.User is not null ? await GetArticlesFeed(Model.PageSize, (Model.Page - 1) * Model.PageSize) : new ArticleFeed(0, []);
+                    await RefreshFeed(model);
+                break;
+                case SetProfileFeed setFeed:
+                    model.SelectedFeed = setFeed.SelectedFeed;
+                    model.Page = 1;
+                    await RefreshFeed(model);
+                    model.TotalPages = model.Feed is not null ? (model.Feed.ArticlesCount + model.PageSize - 1) / model.PageSize : 0;
                     break;
+                case InvertMarkArticleAsFavorite invertMarkArticleAsFavorite:
+                    if (_user.Identity.IsAuthenticated)
+                    {
+                        string userIdentityValue = _user.Claims.FirstOrDefault(claim => claim.Type == "sub").Value;
+                        if (invertMarkArticleAsFavorite.Article.FavoritedBy.Contains(userIdentityValue))
+                        {
+                            await UnmarkArticleAsFavorite(invertMarkArticleAsFavorite.Article.Slug);
+                        }
+                        else
+                        {
+                            await MarkArticleAsFavorite(invertMarkArticleAsFavorite.Article.Slug);
+                        }
+
+                        await RefreshFeed(model);
+                    }
+                    break;
+        }
+            async Task RefreshFeed(ProfilePageModel model)
+            {
+                switch (model.SelectedFeed)
+                {
+                    case SelectedProfileFeed.MyFeed:
+                        model.Feed = await ListArticles(Model.PageSize, (Model.Page - 1) * Model.PageSize, null, Model.Profile.Username, null);
+                        break;
+                    case SelectedProfileFeed.FavoritedFeed:
+                        model.Feed = await ListArticles(model.PageSize, (model.Page - 1) * model.PageSize, null, null, Model.Profile.Username);
+                        break;
+                }
             }
             return model;
         }
@@ -138,14 +181,30 @@ public class Profile : Component<ProfilePageModel, ProfilePageCommand>
 
 public interface ProfilePageCommand;
 
+internal record SetProfileFeed : ProfilePageCommand
+{
+    public SetProfileFeed(SelectedProfileFeed selectedFeed)
+    {
+        SelectedFeed = selectedFeed;
+    }
+
+    public SelectedProfileFeed SelectedFeed { get; }
+}
+
 internal record ChangeProfileFeedPage(int Page) : ProfilePageCommand;
 
 public record ProfilePageModel
 {
     public Domain.Profile? Profile { get; internal set; } 
-    public Domain.User? User { get; internal set; }
     public int PageSize { get; internal set; }
     public int Page { get; internal set; }
     public ArticleFeed? Feed { get; internal set; }
     public int TotalPages { get; internal set; }
+    public SelectedProfileFeed SelectedFeed { get; internal set; }
+}
+
+public enum SelectedProfileFeed
+{
+    MyFeed,
+    FavoritedFeed
 }

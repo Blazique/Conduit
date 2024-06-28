@@ -11,7 +11,7 @@ public static class Extensions
 
     public static CommentDso ToDso(this CommentDto comment) => new CommentDso(comment.Id, comment.Body, comment.CreatedAt, comment.UpdatedAt, comment.Author.ToDso());
 
-    public static CommentDto ToDto(this CommentDso comment) => new CommentDto( comment.Body)
+    public static CommentDto ToDto(this CommentDso comment) =>  new CommentDto( comment.Body)
     {
         Author = comment.Author.ToDto(),
         CreatedAt = comment.CreatedAt,

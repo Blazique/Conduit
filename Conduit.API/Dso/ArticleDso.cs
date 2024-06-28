@@ -16,5 +16,5 @@ public record ArticleDso
     public bool Favorited => FavoritedBy.Count > 0;
     public required string AuthorId { get; init; }
 
-    public required List<CommentDso> Comments { get; init; }
+    public required List<CommentDso> Comments { get; init; } = new();
 }

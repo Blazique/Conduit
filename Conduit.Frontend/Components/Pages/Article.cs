@@ -217,7 +217,7 @@ namespace Conduit.Components
                                     ]),
                                     text(" "),
                                     a([@class(["comment-author"]), href([$"/profile/{comment.Author.Username}"])], [text(comment.Author.Username)]),
-                                    span([@class(["date-posted"])], [text(comment.CreatedAt.Year == DateTime.Now.Year ? FormatDateWithOrdinal(comment.CreatedAt) : FormatDateWithOrdinal(comment.CreatedAt) + " " + comment.CreatedAt.ToString("yyyy"))]),
+                                    span([@class(["date-posted"])], [text(comment.CreatedAt.Year == DateTime.Now.Year ? DateTimeOffsetExtensions.FormatWithOrdinal(comment.CreatedAt) : DateTimeOffsetExtensions.FormatWithOrdinal(comment.CreatedAt) + " " + comment.CreatedAt.ToString("yyyy"))]),
                                     CurrentUserIsCommentAuthor(model, comment) 
                                     ?   span([@class(["mod-options"])], [
                                             button([@class(["ion-edit"])], []),
@@ -233,22 +233,6 @@ namespace Conduit.Components
                 ])
             ];
         }
-        
-        public static string FormatDateWithOrdinal(DateTimeOffset date)
-        {
-            string suffix = (date.Day % 100) switch
-            {
-                11 or 12 or 13 => "th",
-                _ => (date.Day % 10) switch
-                {
-                    1 => "st",
-                    2 => "nd",
-                    3 => "rd",
-                    _ => "th",
-                },
-            };
-            return string.Format("{0:MMM} {1}{2}", date, date.Day, suffix);
-}
 
         private static Node[] ArticleMeta(ArticlePageModel model, Func<ArticlePageCommand, Task> dispatch)
         => [

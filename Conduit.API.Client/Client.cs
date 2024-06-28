@@ -21,9 +21,9 @@ public class Client
         return await _httpClient.GetFromJsonAsync<ArticlesDto>($"/articles/feed?limit={limit}&offset={offset}");
     }
 
-    public async Task<ArticlesDto> GetArticlesAsync(string? tag, string? author, bool? favorited, int? limit, int? offset)
+    public async Task<ArticlesDto> GetArticlesAsync(string? tag, string? author, string? favorited, int? limit, int? offset)
     {
-        return await _httpClient.GetFromJsonAsync<ArticlesDto>($"/articles?limit={limit}&offset={offset}&tag={tag}&author={author}");
+        return await _httpClient.GetFromJsonAsync<ArticlesDto>($"/articles?limit={limit}&offset={offset}&tag={tag}&author={author}&favorited={favorited}");
     }
 
     public async Task<ArticleDto> GetArticleAsync(string slug)

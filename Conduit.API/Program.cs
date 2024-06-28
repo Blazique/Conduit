@@ -103,14 +103,17 @@ app.MapGet("/articles/feed", async (IDocumentSession session, ClaimsPrincipal pr
 }).RequireAuthorization();
 
 // Get a list of articles with optional filtering by tag and author and pagination
-app.MapGet("/articles", async (IDocumentSession session, string? tag, string? author, int limit, int offset) =>
+app.MapGet("/articles", async (IDocumentSession session, string? tag, string? author, int limit, int offset, string favorited) =>
 {
     var authorProfile = !string.IsNullOrEmpty(author) ? session.Query<ProfileDso>().FirstOrDefault(p => p.Username == author) : null;
     var authorProfileId = authorProfile?.Id;
+    var favoritedByProfile = !string.IsNullOrEmpty(favorited) ? session.Query<ProfileDso>().FirstOrDefault(p => p.Username == favorited) : null;
+    var favoritedByProfileId = favoritedByProfile?.Id;
     var query = session
         .Query<ArticleDso>()
         .Where(a => string.IsNullOrEmpty(tag) || a.TagList.Contains(tag))
         .Where(a => string.IsNullOrEmpty(author) || a.AuthorId == authorProfileId)
+        .Where(a => string.IsNullOrEmpty(favorited) || a.FavoritedBy.Contains(favoritedByProfileId))
         .OrderBy(a => a.CreatedAt);
     var queriedArticles = await query.ToListAsync();
     var articlesDtos = await Task.WhenAll(queriedArticles.Skip(offset).Take(limit)
