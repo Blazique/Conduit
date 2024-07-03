@@ -12,6 +12,7 @@ internal static class HostingExtensions
 
         builder.Services.AddIdentityServer()
             .AddInMemoryIdentityResources(Configuration.IdentityResources)
+            .AddInMemoryApiResources(Configuration.ApiResources)
             .AddInMemoryApiScopes(Configuration.ApiScopes)
             .AddInMemoryClients(Configuration.Clients)
             .AddTestUsers(TestUsers.Users);

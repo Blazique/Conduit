@@ -7,6 +7,7 @@ using Conduit.API.Seed;
 using Conduit.API.Dso;
 using Conduit.API;
 using System.Security.Claims;
+using IdentityModel;
 
 static string ToSlug(string title) => title.ToLower().Replace(" ", "-");
 
@@ -41,7 +42,8 @@ builder.Services.AddAuthentication()
     .AddJwtBearer(options =>
     {
         options.Authority = identityServerAuthority;
-        options.TokenValidationParameters.ValidateAudience = false;
+        options.TokenValidationParameters.ValidateAudience = true;
+        options.TokenValidationParameters.ValidAudiences = [Backend.Name];
     });
 builder.Services.AddAuthorization();
 

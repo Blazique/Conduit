@@ -49,6 +49,8 @@ public static class Configuration
                 "verification"
             ],
 
+            
+
             AllowOfflineAccess = true
         }
     ];
@@ -65,6 +67,14 @@ public static class Configuration
                 JwtClaimTypes.Email,
                 JwtClaimTypes.EmailVerified
             }
+        }
+    ];
+
+    public static IEnumerable<ApiResource> ApiResources =>
+    [
+        new ApiResource(Backend.Name)
+        {
+            Scopes = { Services.Access.Scopes.All.Name }
         }
     ];
 }
