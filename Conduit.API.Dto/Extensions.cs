@@ -8,7 +8,7 @@ public static class Extensions
         new(profile.Id, profile.Username, profile.Bio, profile.Image, profile.FollowedBy);
 
     public static ArticleDto ToArticleDto(this Article article) =>
-        new(article.Slug, article.Title, article.Description, article.Body, article.TagList, article.CreatedAt, article.UpdatedAt, article.FavoritedBy, article.Favorited) {  Author = article.Author.ToProfileDto() };
+        new(article.Slug, article.Title, article.Description, article.Body, article.Tags.Select(s => (string)s).ToList(), article.CreatedAt, article.UpdatedAt, article.FavoritedBy, article.Favorited) {  Author = article.Author.ToProfileDto() };
 
     public static CommentDto ToCommentDto(this Comment comment) =>
         new(comment.Body)
@@ -20,7 +20,7 @@ public static class Extensions
         };
 
     public static Article ToArticle(this ArticleDto article) =>
-        new(article.Slug, article.Title, article.Description, article.Body, article.TagList, article.CreatedAt, article.UpdatedAt, article.FavoritedBy, article.Favorited, article.FavoritesCount, article.Author.ToProfile());
+        new((Slug)article.Slug, article.Title, article.Description, article.Body, article.TagList.Select(s => (Tag)s).ToArray(), article.CreatedAt, article.UpdatedAt, article.FavoritedBy, article.Favorited, article.FavoritesCount, article.Author.ToProfile());
 
     public static Comment ToComment(this CommentDto comment) =>
         new(comment.Id, comment.Body, comment.CreatedAt, comment.UpdatedAt, comment.Author.ToProfile());

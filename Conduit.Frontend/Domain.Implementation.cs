@@ -9,12 +9,18 @@ namespace Conduit.Domain;
 
 public static class Implementation
 {
-    public static Func<Client, GetProfile> getProfile =  (Client client) => async (string username) =>
+    public static Func<Client, GetProfile> getProfile = (Client client) => async (string username) =>
     {
         var response = await client.GetProfileByUsernameAsync(username);
-        return response is not null 
-            ? Some(response.ToProfile()) 
+        return response is not null
+            ? Some(response.ToProfile())
             : None<Profile>();
+    };
+
+    public static Func<Client, CreateArticle> createArticle = (Client client) => async (string title, string description, string body, Tag[] tags) =>
+    {
+        var response = await client.CreateArticleAsync(new CreateArticleDto(title, description, body, tags.Select(t => (string)t).ToList()));
+        return Ok<Article, string[]>(response.ToArticle());
     };
 
     public static Func<Client, ListArticles> listArticles = (Client client) => async (int? limit, int? offset, string? tag, string? author, string? favorited) =>

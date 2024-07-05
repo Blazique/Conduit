@@ -1,12 +1,6 @@
-
-using System.Diagnostics.Contracts;
 using System.Security.Claims;
 using Conduit.Domain;
-using IdentityModel;
-using k8s.KubeConfigModels;
-using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Components.Authorization;
-using Microsoft.AspNetCore.Components.Rendering;
 using Radix.Data;
 using static Radix.Control.Option.Extensions;
 using static Radix.Control.Result.Extensions;
@@ -178,7 +172,7 @@ namespace Conduit.Components
                         div([@class(["col-md-12"])],[
                             p([], [text(model.Article.Body)]),
                             ul([@class(["tag-list"])],
-                                model.Article.TagList.Select(tag =>
+                                model.Article.Tags.Select(tag =>
                                     li([@class(["tag-default", "tag-pill", "tag-outline"])], [text(tag)])
                                 ).ToArray()),
                         ])
@@ -298,7 +292,7 @@ namespace Conduit.Components
 
     public record ArticlePageModel
     {
-        public Domain.Article Article { get; init; } = new Domain.Article("", "", "", "", [], DateTimeOffset.Now, DateTimeOffset.Now, new HashSet<string>(), false, 0, new Domain.Profile("", "", "", new HashSet<string>()));
+        public Domain.Article Article { get; init; } = new Domain.Article((Slug)"", "", "", "", [], DateTimeOffset.Now, DateTimeOffset.Now, new HashSet<string>(), false, 0, new Domain.Profile("", "", "", new HashSet<string>()));
         public List<Comment> Comments { get; internal set; } = [];
         public string[] Errors { get; internal set; } = [];
         public string NewComment { get; internal set; } = "";

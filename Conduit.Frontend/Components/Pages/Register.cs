@@ -38,7 +38,7 @@ public class Register : Component<RegisterModel, RegisterCommand>
                                 {
                                     var createUserResponse = await CreateUser(model.UserName, model.Email, model.Password);
                                     switch(createUserResponse){
-                                        case Ok<Domain.User, string[]> _:
+                                        case Ok<User, string[]> _:
                                             //var loginResponse = await Login(model.Email, model.Password);
                                             //switch(loginResponse){
                                             //    case Ok<Domain.User, string>(var user) when user != null:
@@ -109,7 +109,8 @@ public class Register : Component<RegisterModel, RegisterCommand>
                                 input([@class(["form-control", "form-control-lg"]), type(["password"]), placeholder(["Password"]), value([model.Password ?? ""]), on.change(a => dispatch(new SetPasswordForRegistration((string?)a.Value)))], [])
                             ]),
                             button([@class(["btn", "btn-lg", "btn-primary", "pull-xs-right"]), type(["button"]), 
-                            on.click(args => {
+                            on.click(args => 
+                            {
                                 model = model with { Errors = []};
                                 dispatch(new RegisterUser(Registration.Create(model.UserName, model.Email, model.Password)));
                             }

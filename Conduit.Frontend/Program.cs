@@ -124,6 +124,11 @@ builder.Services.AddTransient(serviceProvider =>
     var apiClient = serviceProvider.GetRequiredService<Client>();
     return unfollowUser(apiClient);
 });
+builder.Services.AddTransient(serviceProvider =>
+{
+    var apiClient = serviceProvider.GetRequiredService<Client>();
+    return createArticle(apiClient);
+});
 builder.Services.AddSingleton<MessageBus>();
 
 var app = builder.Build();

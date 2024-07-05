@@ -110,7 +110,7 @@ public class Profile : Component<ProfilePageModel, ProfilePageCommand>
                                             h1([], [text(article.Title)]),
                                             p([], [text(article.Description)]),
                                             span([], [text("Read more...")]),
-                                            ul([@class(["tag-list"])], article.TagList.Select(tag =>
+                                            ul([@class(["tag-list"])], article.Tags.Select(tag =>
                                                 li([@class(["tag-pill", "tag-default", "tag-outline"])], [text(tag)])).ToArray()),
                                                 
                                         ])
